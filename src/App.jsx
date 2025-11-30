@@ -1,35 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import "./styles/global.css";
+// import './App.css'
+import "./styles/global.css";
+import Navbar from "./components/Navbar";
+import HomePage from "./pages/HomePage";
+import OpenTicketPage from "./pages/OpenTicketPage";
+import TicketListPage from "./pages/TicketListPage";
+import TicketDetailPage from "./pages/TicketDetailPage";
+import AssignTicketPage from "./pages/AssignTicketPage";
+import TechnicianDashboard from "./pages/TechnicianDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import LoginPage from "./pages/LoginPage";
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <BrowserRouter>
+        <Navbar />
+        <div className="route-container">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/open-ticket" element={<OpenTicketPage />} />
+            <Route path="/tickets" element={<TicketListPage />} />
+            <Route path="/ticket/:id" element={<TicketDetailPage />} />
+            <Route path="/assign-ticket" element={<AssignTicketPage />} />
+            <Route path="/technician" element={<TechnicianDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/login" element={<LoginPage />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

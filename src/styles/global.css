@@ -1,0 +1,179 @@
+html.light {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+:root,
+/* ---------- LIGHT ORANGE THEME ---------- */
+html.light {
+  --bg: #fffaf0; /* very light warm background */
+  --fg: #3a2f1b; /* dark brown text for contrast */
+  --accent: #ff7f11; /* bright orange for buttons & highlights */
+  --muted: rgba(58, 47, 27, 0.55); /* lighter brown for secondary text */
+  --card-bg: #fff2e0; /* soft orange card background */
+  --card-border: rgba(255, 127, 17, 0.2); /* subtle border in accent tone */
+  --glass: rgba(255, 127, 17, 0.08); /* translucent hint of orange */
+  --radius: 12px;
+  --shadow: 0 6px 18px rgba(255, 127, 17, 0.15);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono",
+    "Segoe UI Mono", monospace;
+}
+
+/* ---------- DARK THEME ---------- */
+html.dark {
+  --bg: #0d1117; /* very dark blue-black */
+  --fg: #e0e6f2; /* soft off-white text */
+  --accent: #ff9f43; /* warm orange accent */
+  --muted: rgba(224, 230, 242, 0.55); /* muted text */
+  --card-bg: rgba(255, 159, 67, 0.05); /* subtle translucent orange cards */
+  --card-border: rgba(255, 159, 67, 0.12); /* border in orange */
+  --glass: rgba(255, 159, 67, 0.08); /* translucent accent effect */
+  --radius: 12px;
+  --shadow: 0 8px 26px rgba(0, 0, 0, 0.6); /* stronger shadow for depth */
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono",
+    "Segoe UI Mono", monospace;
+}
+
+/* ---------- Navbar base ---------- */
+ul {
+  display: flex;
+  align-items: center;
+  gap: 24px; /* space between items */
+  list-style: none; /* remove bullets */
+  margin: 0;
+  padding: 12px 24px;
+  background: var(--bg); /* theme background */
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---------- Navbar links ---------- */
+ul li a {
+  text-decoration: none;
+  color: var(--fg);
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+ul li a:hover {
+  background: var(--accent);
+  color: #fff; /* ensure contrast */
+}
+
+/* ---------- Toggle button ---------- */
+#themeToggle {
+  margin-left: auto; /* pushes button to the right */
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+#themeToggle:hover {
+  background: color-mix(in srgb, var(--accent) 80%, black 20%);
+}
+
+#themeToggle:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  ul {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  #themeToggle {
+    margin-left: 0;
+  }
+}
+#themeToggle {
+  margin-left: auto;
+  padding: 8px 12px;
+  font-size: 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#themeToggle:hover {
+  background: color-mix(in srgb, var(--accent) 80%, black 20%);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100%;
+  background: linear-gradient(
+    180deg,
+    var(--bg),
+    color-mix(in srgb, var(--bg) 92%, black 8%)
+  );
+  color: var(--fg);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+  padding: 28px;
+}
+
+/* ---------- Route Container ---------- */
+.route-container {
+  max-width: 2000px; /* keeps content centered and not too wide */
+  margin: 24px auto; /* vertical spacing + center horizontally */
+  padding: 24px; /* inner spacing */
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
+  transition: background 0.3s, color 0.3s; /* smooth theme switch */
+  min-height: calc(100vh - 160px); /* fill most of the viewport */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- Responsive Adjustments ---------- */
+@media (max-width: 1024px) {
+  .route-container {
+    padding: 20px;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .route-container {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .route-container {
+    padding: 12px;
+    gap: 12px;
+  }
+}

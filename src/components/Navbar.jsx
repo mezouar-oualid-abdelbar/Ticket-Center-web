@@ -43,19 +43,13 @@ function Navbar() {
         <Link to="/">Home</Link>
       </li>
       <li>
-        <Link to="/open-ticket">Open Ticket</Link>
+        <Link to="/technician/assignments">Technician</Link>
       </li>
       <li>
-        <Link to="/tickets">Tickets</Link>
+        <Link to="/manage/assignments">Manager</Link>
       </li>
       <li>
-        <Link to="/technician">Technician</Link>
-      </li>
-      <li>
-        <Link to="/admin">Admin</Link>
-      </li>
-      <li>
-        <Link to="/about">About</Link>
+        <Link to="/dashboard">Dashboard</Link>
       </li>
 
       <button id="themeToggle" className="btn" onClick={toggleTheme}>

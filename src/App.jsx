@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import AssignmentPage from "./pages/Technician/AssignmentPage";
 import ManagerAssignmentPage from "./pages/Manage/ManagerAssignmentPage";
+import AssignUser from "./pages/Manage/AssignUser";
 function App() {
   const [count, setCount] = useState(0);
 
@@ -25,6 +26,7 @@ function App() {
               path="/manage/assignments"
               element={<ManagerAssignmentPage />}
             />
+            <Route path="/assign/" element={<AssignUser />} />
           </Routes>
         </div>
       </BrowserRouter>

@@ -34,7 +34,7 @@ export default function ManagerAssignmentPage() {
 
                 <td>
                   {assignment.groupid === null ? (
-                    <a href=""> assign </a>
+                    <a href={`/assign/${assignment.id}`}> assign </a>
                   ) : (
                     assignment.groupid
                   )}

@@ -1,9 +1,18 @@
-import { http } from "./http";
+// import { http } from "./http";
 
-export function login(data) {
-  return http.post("login.php", data);
-}
-
-export function getUsers() {
-  return http.get("users.php");
-}
+export const usersApi = {
+  getUser: () => [
+    {
+      id: 1,
+      name: "walid",
+    },
+    {
+      id: 2,
+      name: "jhon doe",
+    },
+    {
+      id: 3,
+      name: "bob",
+    },
+  ],
+};

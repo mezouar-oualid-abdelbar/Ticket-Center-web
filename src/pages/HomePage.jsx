@@ -6,6 +6,7 @@ function HomePage() {
         This system allows employees to report issues and managers to assign
         tickets to technicians for intervention.
       </p>
+      <a href="/createAssigment">create ticket</a>
     </div>
   );
 }

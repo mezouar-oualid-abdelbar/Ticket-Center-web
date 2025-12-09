@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import AssignmentPage from "./pages/Technician/AssignmentPage";
 import ManagerAssignmentPage from "./pages/Manage/ManagerAssignmentPage";
 import AssignUser from "./pages/Manage/AssignUser";
+import CreateAssigment from "./pages/default/CreateAssigment";
 function App() {
   const [count, setCount] = useState(0);
 
@@ -26,7 +27,8 @@ function App() {
               path="/manage/assignments"
               element={<ManagerAssignmentPage />}
             />
-            <Route path="/assign/" element={<AssignUser />} />
+            <Route path="/assign/:id" element={<AssignUser />} />
+            <Route path="/createAssigment" element={<CreateAssigment />} />
           </Routes>
         </div>
       </BrowserRouter>

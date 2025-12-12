@@ -9,6 +9,10 @@ import AssignmentPage from "./pages/Technician/AssignmentPage";
 import ManagerAssignmentPage from "./pages/Manage/ManagerAssignmentPage";
 import AssignUser from "./pages/Manage/AssignUser";
 import CreateAssigment from "./pages/default/CreateAssigment";
+import Dashboard from "./pages/dashboard/Dashboard";
+import Facelities from "./pages/dashboard/Facelies";
+import WorkersManagement from "./pages/dashboard/WorkersManagement";
+
 function App() {
   const [count, setCount] = useState(0);
 
@@ -29,6 +33,12 @@ function App() {
             />
             <Route path="/assign/:id" element={<AssignUser />} />
             <Route path="/createAssigment" element={<CreateAssigment />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/facelities" element={<Facelities />} />
+            <Route
+              path="/dashboard/workersManagement"
+              element={<WorkersManagement />}
+            />
           </Routes>
         </div>
       </BrowserRouter>

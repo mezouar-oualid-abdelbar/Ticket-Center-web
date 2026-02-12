@@ -6,6 +6,7 @@ import "./styles/global.css";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import AssignmentPage from "./pages/Technician/AssignmentPage";
+import UpdateAssigment from "./pages/Technician/UpdateAssigment";
 import ManagerAssignmentPage from "./pages/Manage/ManagerAssignmentPage";
 import AssignUser from "./pages/Manage/AssignUser";
 import CreateAssigment from "./pages/default/CreateAssigment";
@@ -39,6 +40,7 @@ function App() {
               path="/dashboard/workersManagement"
               element={<WorkersManagement />}
             />
+            <Route path="/UpdateAssigment/:id" element={<UpdateAssigment />} />
           </Routes>
         </div>
       </BrowserRouter>

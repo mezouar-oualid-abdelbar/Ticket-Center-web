@@ -18,8 +18,11 @@ html.light {
   --glass: rgba(255, 127, 17, 0.08); /* translucent hint of orange */
   --radius: 12px;
   --shadow: 0 6px 18px rgba(255, 127, 17, 0.15);
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono",
-    "Segoe UI Mono", monospace;
+  --success: #a4ff11;
+  --danger: #ff3511;
+  --mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono",
+    monospace;
 }
 
 /* ---------- DARK THEME ---------- */
@@ -33,8 +36,11 @@ html.dark {
   --glass: rgba(255, 159, 67, 0.08); /* translucent accent effect */
   --radius: 12px;
   --shadow: 0 8px 26px rgba(0, 0, 0, 0.6); /* stronger shadow for depth */
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono",
-    "Segoe UI Mono", monospace;
+  --success: #a4ff11;
+  --danger: #ff3511;
+  --mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono",
+    monospace;
 }
 
 /* ---------- Navbar base ---------- */
@@ -49,7 +55,12 @@ ul {
   border-radius: var(--radius);
   border: 1px solid var(--card-border);
   box-shadow: var(--shadow);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 /* ---------- Navbar links ---------- */
@@ -59,7 +70,9 @@ ul li a {
   font-weight: 600;
   padding: 8px 12px;
   border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 ul li a:hover {
@@ -77,7 +90,10 @@ ul li a:hover {
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.1s,
+    box-shadow 0.2s;
 }
 
 #themeToggle:hover {
@@ -132,8 +148,14 @@ body {
     color-mix(in srgb, var(--bg) 92%, black 8%)
   );
   color: var(--fg);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.45;
@@ -149,7 +171,9 @@ body {
   border-radius: var(--radius);
   border: 1px solid var(--card-border);
   box-shadow: var(--shadow);
-  transition: background 0.3s, color 0.3s; /* smooth theme switch */
+  transition:
+    background 0.3s,
+    color 0.3s; /* smooth theme switch */
   min-height: calc(100vh - 160px); /* fill most of the viewport */
   display: flex;
   flex-direction: column;
@@ -165,7 +189,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .assignment-widget h2 {
@@ -339,4 +365,69 @@ body {
     padding: 12px;
     gap: 12px;
   }
+}
+/* ---------- Form Card ---------- */
+.form-card {
+  max-width: 500px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: transform 0.2s ease;
+}
+
+.form-card:hover {
+  transform: translateY(-3px);
+}
+.input {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--fg);
+  width: 100%;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.2s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.btn-submit {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: none;
+  background: var(--success);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
 }

@@ -80,6 +80,276 @@ ul li a:hover {
   color: #fff; /* ensure contrast */
 }
 
+/* ================= FACEBOOK STYLE NAVBAR ================= */
+
+.fb-navbar {
+  display: flex;
+  align-items: center;
+  gap: 24px; /* space between items */
+  list-style: none; /* remove bullets */
+  margin: 0;
+  padding: 12px 24px;
+  background: var(--bg); /* theme background */
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+
+  /* 
+  
+  
+  */
+  height: 64px;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+/* ================= LEFT SECTION ================= */
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass);
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--card-border);
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--fg);
+  font-size: 0.9rem;
+}
+
+/* ================= CENTER SECTION ================= */
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--fg);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav-icon:hover {
+  background: var(--glass);
+  color: var(--accent);
+}
+
+/* ================= RIGHT SECTION ================= */
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Theme Button */
+#themeToggle {
+  background: var(--glass);
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: var(--fg);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#themeToggle:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ================= BADGE (Notification / Message Count) ================= */
+
+.badge-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  background: var(--danger);
+  color: white;
+  font-size: 0.65rem;
+  padding: 3px 6px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ================= DROPDOWN WRAPPER ================= */
+
+.dropdown-wrapper {
+  position: relative;
+}
+
+/* ================= GENERIC PANEL (Notifications / Messages) ================= */
+
+.dropdown-panel {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease;
+  z-index: 2000;
+}
+
+.panel-header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--card-border);
+  font-weight: 600;
+}
+
+.panel-header button {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.panel-list {
+  overflow-y: auto;
+}
+
+.panel-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--card-border);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.panel-item:hover {
+  background: var(--glass);
+}
+
+.panel-item.unread {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  font-weight: 600;
+}
+
+/* ================= PROFILE ================= */
+
+.profile {
+  position: relative;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ================= PROFILE DROPDOWN ================= */
+
+.profile-dropdown {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 220px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  animation: fadeIn 0.15s ease;
+  z-index: 2000;
+}
+
+.dropdown-item {
+  padding: 10px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--fg);
+  transition: 0.2s;
+}
+
+.dropdown-item:hover {
+  background: var(--glass);
+  color: var(--accent);
+}
+
+.dropdown-item.danger:hover {
+  color: var(--danger);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--card-border);
+  margin: 6px 0;
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ---------- Toggle button ---------- */
 #themeToggle {
   margin-left: auto; /* pushes button to the right */

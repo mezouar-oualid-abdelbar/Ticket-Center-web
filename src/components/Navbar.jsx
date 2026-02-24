@@ -6,7 +6,6 @@ import {
   faUserGear,
   faClipboardList,
   faChartLine,
-  faSearch,
   faBell,
   faEnvelope,
   faRightFromBracket,
@@ -14,14 +13,61 @@ import {
   faRepeat,
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
+
 import { Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+
+/* ================= CHAT BOX COMPONENT ================= */
+
+function ChatBox({ message, onClose }) {
+  const [text, setText] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { from: "bot", text: message.text },
+  ]);
+
+  const sendMessage = () => {
+    if (!text.trim()) return;
+
+    setChatMessages((prev) => [...prev, { from: "user", text }]);
+
+    setText("");
+  };
+
+  return (
+    <div className="chat-popup">
+      <div className="chat-header">
+        <span>Chat</span>
+        <button onClick={onClose}>✖</button>
+      </div>
+
+      <div className="chat-body">
+        {chatMessages.map((msg, index) => (
+          <div key={index} className={`message ${msg.from}`}>
+            {msg.text}
+          </div>
+        ))}
+      </div>
+
+      <div className="chat-footer">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Type message..."
+        />
+        <button onClick={sendMessage}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+/* ================= NAVBAR COMPONENT ================= */
 
 function Navbar() {
   const [isDark, setIsDark] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [msgOpen, setMsgOpen] = useState(false);
+  const [activeChat, setActiveChat] = useState(null);
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
@@ -33,7 +79,7 @@ function Navbar() {
     { id: 3, text: "Report generated", unread: false },
   ]);
 
-  const [messages, setMessages] = useState([
+  const [messages] = useState([
     { id: 1, text: "Manager sent you a message", unread: true },
     { id: 2, text: "Reminder about meeting", unread: false },
   ]);
@@ -42,6 +88,7 @@ function Navbar() {
   const unreadMsg = messages.filter((m) => m.unread).length;
 
   /* ================= THEME INIT ================= */
+
   useEffect(() => {
     const html = document.documentElement;
     const saved = localStorage.getItem("theme");
@@ -58,156 +105,170 @@ function Navbar() {
     const html = document.documentElement;
     html.classList.toggle("dark");
     html.classList.toggle("light");
+
     const newTheme = html.classList.contains("dark") ? "dark" : "light";
     setIsDark(newTheme === "dark");
     localStorage.setItem("theme", newTheme);
   };
 
   /* ================= CLOSE OUTSIDE ================= */
+
   useEffect(() => {
     const handler = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
+      if (profileRef.current && !profileRef.current.contains(e.target))
         setProfileOpen(false);
-      }
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
+
+      if (notifRef.current && !notifRef.current.contains(e.target))
         setNotifOpen(false);
-      }
-      if (msgRef.current && !msgRef.current.contains(e.target)) {
+
+      if (msgRef.current && !msgRef.current.contains(e.target))
         setMsgOpen(false);
-      }
     };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const markAllNotifRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
-  };
-
-  const markAllMsgRead = () => {
-    setMessages(messages.map((m) => ({ ...m, unread: false })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
   };
 
   return (
-    <nav className="fb-navbar">
-      {/* LEFT */}
-      <div className="nav-left">
-        <div className="logo">TC</div>
-      </div>
-
-      {/* CENTER */}
-      <div className="nav-center">
-        <Link to="/" className="nav-icon">
-          <FontAwesomeIcon icon={faHouse} />
-        </Link>
-        <Link to="/technician/assignments" className="nav-icon">
-          <FontAwesomeIcon icon={faClipboardList} />
-        </Link>
-        <Link to="/manage/assignments" className="nav-icon">
-          <FontAwesomeIcon icon={faUserGear} />
-        </Link>
-        <Link to="/dashboard" className="nav-icon">
-          <FontAwesomeIcon icon={faChartLine} />
-        </Link>
-      </div>
-
-      {/* RIGHT */}
-      <div className="nav-right">
-        {/* MESSAGES */}
-        <div className="dropdown-wrapper" ref={msgRef}>
-          <div
-            className="nav-icon badge-wrapper"
-            onClick={() => setMsgOpen(!msgOpen)}
-          >
-            <FontAwesomeIcon icon={faEnvelope} />
-            {unreadMsg > 0 && <span className="badge">{unreadMsg}</span>}
-          </div>
-
-          {msgOpen && (
-            <div className="dropdown-panel">
-              <div className="panel-header">
-                <span>Messages</span>
-                <button onClick={markAllMsgRead}>
-                  <FontAwesomeIcon icon={faCheck} />
-                </button>
-              </div>
-              <div className="panel-list">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`panel-item ${m.unread ? "unread" : ""}`}
-                  >
-                    {m.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+    <>
+      <nav className="fb-navbar">
+        {/* LEFT */}
+        <div className="nav-left">
+          <div className="logo">TC</div>
         </div>
 
-        {/* NOTIFICATIONS */}
-        <div className="dropdown-wrapper" ref={notifRef}>
-          <div
-            className="nav-icon badge-wrapper"
-            onClick={() => setNotifOpen(!notifOpen)}
-          >
-            <FontAwesomeIcon icon={faBell} />
-            {unreadNotif > 0 && <span className="badge">{unreadNotif}</span>}
-          </div>
+        {/* CENTER */}
+        <div className="nav-center">
+          <Link to="/" className="nav-icon">
+            <FontAwesomeIcon icon={faHouse} />
+          </Link>
 
-          {notifOpen && (
-            <div className="dropdown-panel">
-              <div className="panel-header">
-                <span>Notifications</span>
-                <button onClick={markAllNotifRead}>
-                  <FontAwesomeIcon icon={faCheck} />
-                </button>
-              </div>
-              <div className="panel-list">
-                {notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`panel-item ${n.unread ? "unread" : ""}`}
-                  >
-                    {n.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <Link to="/technician/assignments" className="nav-icon">
+            <FontAwesomeIcon icon={faClipboardList} />
+          </Link>
+
+          <Link to="/manage/assignments" className="nav-icon">
+            <FontAwesomeIcon icon={faUserGear} />
+          </Link>
+
+          <Link to="/dashboard" className="nav-icon">
+            <FontAwesomeIcon icon={faChartLine} />
+          </Link>
         </div>
 
-        {/* PROFILE */}
-        <div className="dropdown-wrapper" ref={profileRef}>
-          <div className="avatar" onClick={() => setProfileOpen(!profileOpen)}>
-            A
+        {/* RIGHT */}
+        <div className="nav-right">
+          {/* MESSAGES */}
+          <div className="dropdown-wrapper" ref={msgRef}>
+            <div
+              className="nav-icon badge-wrapper"
+              onClick={() => setMsgOpen(!msgOpen)}
+            >
+              <FontAwesomeIcon icon={faEnvelope} />
+              {unreadMsg > 0 && <span className="badge">{unreadMsg}</span>}
+            </div>
+
+            {msgOpen && (
+              <div className="dropdown-panel">
+                <div className="panel-header">
+                  <span>Messages</span>
+                </div>
+
+                <div className="panel-list">
+                  {messages.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`panel-item ${m.unread ? "unread" : ""}`}
+                      onClick={() => {
+                        setActiveChat(m);
+                        setMsgOpen(false);
+                      }}
+                    >
+                      {m.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {profileOpen && (
-            <div className="profile-dropdown">
-              <Link to="/settings" className="dropdown-item">
-                <FontAwesomeIcon icon={faGear} /> Settings
-              </Link>
-
-              <div className="dropdown-item">
-                <FontAwesomeIcon icon={faRepeat} /> Switch Account
-              </div>
-
-              <div className="dropdown-item" onClick={toggleTheme}>
-                <FontAwesomeIcon icon={isDark ? faMoon : faSun} />
-                {isDark ? " Dark Mode" : " Light Mode"}
-              </div>
-
-              <div className="dropdown-divider"></div>
-
-              <div className="dropdown-item danger">
-                <FontAwesomeIcon icon={faRightFromBracket} /> Logout
-              </div>
+          {/* NOTIFICATIONS */}
+          <div className="dropdown-wrapper" ref={notifRef}>
+            <div
+              className="nav-icon badge-wrapper"
+              onClick={() => setNotifOpen(!notifOpen)}
+            >
+              <FontAwesomeIcon icon={faBell} />
+              {unreadNotif > 0 && <span className="badge">{unreadNotif}</span>}
             </div>
-          )}
+
+            {notifOpen && (
+              <div className="dropdown-panel">
+                <div className="panel-header">
+                  <span>Notifications</span>
+                  <button onClick={markAllNotifRead}>
+                    <FontAwesomeIcon icon={faCheck} />
+                  </button>
+                </div>
+
+                <div className="panel-list">
+                  {notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className={`panel-item ${n.unread ? "unread" : ""}`}
+                    >
+                      {n.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* PROFILE */}
+          <div className="dropdown-wrapper" ref={profileRef}>
+            <div
+              className="avatar"
+              onClick={() => setProfileOpen(!profileOpen)}
+            >
+              A
+            </div>
+
+            {profileOpen && (
+              <div className="profile-dropdown">
+                <Link to="/settings" className="dropdown-item">
+                  <FontAwesomeIcon icon={faGear} /> Settings
+                </Link>
+
+                <div className="dropdown-item">
+                  <FontAwesomeIcon icon={faRepeat} /> Switch Account
+                </div>
+
+                <div className="dropdown-item" onClick={toggleTheme}>
+                  <FontAwesomeIcon icon={isDark ? faMoon : faSun} />
+                  {isDark ? " Dark Mode" : " Light Mode"}
+                </div>
+
+                <div className="dropdown-divider"></div>
+
+                <div className="dropdown-item danger">
+                  <FontAwesomeIcon icon={faRightFromBracket} /> Logout
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* FLOATING CHAT */}
+      {activeChat && (
+        <ChatBox message={activeChat} onClose={() => setActiveChat(null)} />
+      )}
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 import { assigmentApi } from "../../api/assigment";
 
 export default function ManagerAssignmentPage() {
-  const assignments = assigmentApi.getAssigment();
+  const assignments = assigmentApi.getAssigments();
   return (
     <>
       <h1>Manage Assignments</h1>
@@ -25,7 +25,7 @@ export default function ManagerAssignmentPage() {
                   <span
                     className={`status-${assignment.status.replace(
                       " ",
-                      "\\ "
+                      "\\ ",
                     )}`}
                   >
                     {assignment.status}
@@ -36,7 +36,7 @@ export default function ManagerAssignmentPage() {
                   {assignment.groupid === null ? (
                     <a href={`/assign/${assignment.id}`}> assign </a>
                   ) : (
-                    assignment.groupid
+                    <a href={`/progress/${assignment.id}`}> watch progeress </a>
                   )}
                 </td>
               </tr>

@@ -12,7 +12,7 @@ export const assigmentApi = {
       id: 2,
       task: "Fix login page bug",
       status: "In Progress",
-      groupid: null,
+      groupid: 1,
     },
     {
       id: 3,

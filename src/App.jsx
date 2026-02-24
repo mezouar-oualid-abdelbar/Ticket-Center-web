@@ -12,6 +12,7 @@ import AssignUser from "./pages/Manage/AssignUser";
 import CreateAssigment from "./pages/default/CreateAssigment";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Facelities from "./pages/dashboard/Facelies";
+import Progress from "./pages/Manage/Progress";
 import WorkersManagement from "./pages/dashboard/WorkersManagement";
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
               element={<ManagerAssignmentPage />}
             />
             <Route path="/assign/:id" element={<AssignUser />} />
+            <Route path="/progress/:id" element={<Progress />} />
             <Route path="/createAssigment" element={<CreateAssigment />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/facelities" element={<Facelities />} />

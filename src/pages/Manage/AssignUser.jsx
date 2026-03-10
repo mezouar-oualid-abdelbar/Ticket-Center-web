@@ -59,85 +59,95 @@ export default function AssignUserPalette() {
   ============================== */
 
   return (
-    <div style={{ maxWidth: 420 }}>
-      {/* ================= LEADER ================= */}
-      <h3>Assign Leader</h3>
+    <>
+      <Navbar />
+      <div className="route-container">
+        <div style={{ maxWidth: 420 }}>
+          {/* ================= LEADER ================= */}
+          <h3>Assign Leader</h3>
 
-      <div style={{ position: "relative" }}>
-        <input
-          type="text"
-          placeholder="Search leader..."
-          value={leaderSearch}
-          onChange={(e) => setLeaderSearch(e.target.value)}
-          style={inputStyle}
-        />
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              placeholder="Search leader..."
+              value={leaderSearch}
+              onChange={(e) => setLeaderSearch(e.target.value)}
+              style={inputStyle}
+            />
 
-        {filteredLeaders.length > 0 && (
-          <div style={dropdownStyle}>
-            {filteredLeaders.map((user) => (
-              <div
-                key={user.id}
-                onClick={() => selectLeader(user)}
-                style={dropdownItem}
-              >
-                {user.name}
+            {filteredLeaders.length > 0 && (
+              <div style={dropdownStyle}>
+                {filteredLeaders.map((user) => (
+                  <div
+                    key={user.id}
+                    onClick={() => selectLeader(user)}
+                    style={dropdownItem}
+                  >
+                    {user.name}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
 
-      {leader && (
-        <div style={singleTag}>
-          {leader.name}
-          <button onClick={() => setLeader(null)} style={removeBtn}>
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* ================= USERS ================= */}
-      <h3 style={{ marginTop: 30 }}>Assign Users</h3>
-
-      <div style={{ position: "relative" }}>
-        <input
-          type="text"
-          placeholder="Search users..."
-          value={userSearch}
-          onChange={(e) => setUserSearch(e.target.value)}
-          style={inputStyle}
-        />
-
-        {filteredUsers.length > 0 && (
-          <div style={dropdownStyle}>
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                onClick={() => addUser(user)}
-                style={dropdownItem}
-              >
-                {user.name}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {users.length > 0 && (
-        <div
-          style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}
-        >
-          {users.map((user) => (
-            <div key={user.id} style={tagStyle}>
-              {user.name}
-              <button onClick={() => removeUser(user.id)} style={removeBtn}>
+          {leader && (
+            <div style={singleTag}>
+              {leader.name}
+              <button onClick={() => setLeader(null)} style={removeBtn}>
                 ✕
               </button>
             </div>
-          ))}
+          )}
+
+          {/* ================= USERS ================= */}
+          <h3 style={{ marginTop: 30 }}>Assign Users</h3>
+
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              style={inputStyle}
+            />
+
+            {filteredUsers.length > 0 && (
+              <div style={dropdownStyle}>
+                {filteredUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    onClick={() => addUser(user)}
+                    style={dropdownItem}
+                  >
+                    {user.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {users.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                marginTop: 12,
+              }}
+            >
+              {users.map((user) => (
+                <div key={user.id} style={tagStyle}>
+                  {user.name}
+                  <button onClick={() => removeUser(user.id)} style={removeBtn}>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 

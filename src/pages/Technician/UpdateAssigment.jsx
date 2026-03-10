@@ -2,6 +2,7 @@ import { assigmentApi } from "../../api/assigment";
 import Appointment from "../../components/forms/Appointment";
 import Consltation from "../../components/forms/Consltation";
 import { useParams } from "react-router-dom";
+import Navbar from "../../components/navbar/Navbar";
 
 export default function UpdateAssigment() {
   const { id } = useParams();
@@ -13,13 +14,17 @@ export default function UpdateAssigment() {
 
   return (
     <>
-      <h1>{assignment.task}</h1>
+      <Navbar />
 
-      {assignment.status === "Pending" ? (
-        <Appointment id={assignment.id} />
-      ) : (
-        <Consltation id={assignment.id} />
-      )}
+      <div className="route-container">
+        <h1>{assignment.task}</h1>
+
+        {assignment.status === "Pending" ? (
+          <Appointment id={assignment.id} />
+        ) : (
+          <Consltation id={assignment.id} />
+        )}
+      </div>
     </>
   );
 }

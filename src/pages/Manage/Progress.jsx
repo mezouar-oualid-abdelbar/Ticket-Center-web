@@ -1,3 +1,5 @@
+import Navbar from "../../components/navbar/Navbar";
+
 export default function AssignUserPalette() {
   const consultations = [
     {
@@ -15,19 +17,24 @@ export default function AssignUserPalette() {
   ];
 
   return (
-    <div style={wrapper}>
-      <p style={appointment}>Appointment set to 13/13/2025 13:00</p>
+    <>
+      <Navbar />
+      <div className="route-container">
+        <div style={wrapper}>
+          <p style={appointment}>Appointment set to 13/13/2025 13:00</p>
 
-      {consultations.map((c) => (
-        <div key={c.id} style={card}>
-          <div style={cardHeader}>
-            <span style={cardTitle}>{c.title}</span>
-            <span style={cardTime}>{c.time}</span>
-          </div>
-          <div style={cardBody}>{c.note}</div>
+          {consultations.map((c) => (
+            <div key={c.id} style={card}>
+              <div style={cardHeader}>
+                <span style={cardTitle}>{c.title}</span>
+                <span style={cardTime}>{c.time}</span>
+              </div>
+              <div style={cardBody}>{c.note}</div>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
+      </div>{" "}
+    </>
   );
 }
 

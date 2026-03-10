@@ -4,48 +4,74 @@ export default function ChatBox() {
   const [text, setText] = useState("");
   const [minimized, setMinimized] = useState(false);
   const [typing, setTyping] = useState(false);
+
   const [messages, setMessages] = useState([
     {
-      id: 1,
+      id: crypto.randomUUID(),
       sender: "bot",
       text: "Hey 👋 Need help?",
       time: new Date(),
     },
   ]);
 
-  const chatRef = useRef(null);
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+  const timeoutRef = useRef(null);
+
+  /* AUTO SCROLL */
 
   useEffect(() => {
-    chatRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  const sendMessage = () => {
-    if (!text.trim()) return;
+  /* CLEAN TIMEOUT */
 
-    const newMsg = {
-      id: Date.now(),
+  useEffect(() => {
+    return () => clearTimeout(timeoutRef.current);
+  }, []);
+
+  /* SEND MESSAGE */
+
+  const sendMessage = () => {
+    const value = text.trim();
+    if (!value) return;
+
+    const userMsg = {
+      id: crypto.randomUUID(),
       sender: "user",
-      text,
+      text: value,
       time: new Date(),
     };
 
-    setMessages((prev) => [...prev, newMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setText("");
     setTyping(true);
 
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: "bot",
-          text: "We received your message.",
-          time: new Date(),
-        },
-      ]);
+    timeoutRef.current = setTimeout(() => {
+      const botMsg = {
+        id: crypto.randomUUID(),
+        sender: "bot",
+        text: "We received your message.",
+        time: new Date(),
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
       setTyping(false);
     }, 1200);
+
+    inputRef.current?.focus();
   };
+
+  /* ENTER KEY */
+
+  const handleKey = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  /* MINIMIZED MODE */
 
   if (minimized) {
     return (
@@ -58,9 +84,11 @@ export default function ChatBox() {
   return (
     <div className="messenger-window">
       {/* HEADER */}
+
       <div className="messenger-header">
         <div className="header-left">
           <img src="https://i.pravatar.cc/100?img=5" alt="avatar" />
+
           <div>
             <div className="name">Support Team</div>
             <div className="status">Active now</div>
@@ -73,6 +101,7 @@ export default function ChatBox() {
       </div>
 
       {/* BODY */}
+
       <div className="messenger-body">
         {messages.map((msg, index) => {
           const isUser = msg.sender === "user";
@@ -90,9 +119,9 @@ export default function ChatBox() {
               )}
 
               <div
-                className={`msg-bubble ${isUser ? "user" : "bot"} ${
-                  grouped ? "grouped" : ""
-                }`}
+                className={`msg-bubble ${
+                  isUser ? "user" : "bot"
+                } ${grouped ? "grouped" : ""}`}
                 title={msg.time.toLocaleTimeString()}
               >
                 {msg.text}
@@ -101,6 +130,8 @@ export default function ChatBox() {
           );
         })}
 
+        {/* TYPING INDICATOR */}
+
         {typing && (
           <div className="msg-row bot">
             <img
@@ -108,6 +139,7 @@ export default function ChatBox() {
               alt=""
               className="msg-avatar"
             />
+
             <div className="typing">
               <span></span>
               <span></span>
@@ -116,18 +148,20 @@ export default function ChatBox() {
           </div>
         )}
 
-        <div ref={chatRef}></div>
+        <div ref={bottomRef}></div>
 
         <div className="seen">Seen</div>
       </div>
 
       {/* FOOTER */}
+
       <div className="messenger-footer">
         <input
+          ref={inputRef}
           placeholder="Aa"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          onKeyDown={handleKey}
         />
       </div>
     </div>

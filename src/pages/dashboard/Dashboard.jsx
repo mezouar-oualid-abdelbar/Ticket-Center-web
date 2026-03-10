@@ -7,7 +7,7 @@ import {
 
 export default function Dashboard() {
   return (
-    <>
+    <div className="route-container">
       {/* users widget */}
       <h1>Dashboard</h1>
       <div className="assignment-grid">
@@ -43,6 +43,6 @@ export default function Dashboard() {
           </span>
         </div>
       </div>
-    </>
+    </div>
   );
 }

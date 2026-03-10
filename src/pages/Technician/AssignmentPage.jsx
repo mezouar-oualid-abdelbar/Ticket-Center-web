@@ -1,4 +1,5 @@
 import { assigmentApi } from "../../api/assigment";
+import Navbar from "../../components/navbar/Navbar";
 
 export default function AssignmentPage() {
   const assignments = assigmentApi.getAssigments();
@@ -12,24 +13,30 @@ export default function AssignmentPage() {
   }
   return (
     <>
-      <h1>Your Assignments</h1>
-      <div className="assignment-grid">
-        {filteredAssignments.map((assignment) => (
-          <div
-            key={assignment.id}
-            className="assignment-widget"
-            onClick={() => handleAssignmentClick(assignment)}
-            style={{ cursor: "pointer" }} // makes it visually clickable
-          >
-            <h2>#{assignment.id}</h2>
-            <p>{assignment.task}</p>
-            <span className={`status-${assignment.status.replace(" ", "\\ ")}`}>
-              {assignment.status === "Pending"
-                ? "make appointment"
-                : "consltation"}
-            </span>
-          </div>
-        ))}
+      <Navbar />
+
+      <div className="route-container">
+        <h1>Your Assignments</h1>
+        <div className="assignment-grid">
+          {filteredAssignments.map((assignment) => (
+            <div
+              key={assignment.id}
+              className="assignment-widget"
+              onClick={() => handleAssignmentClick(assignment)}
+              style={{ cursor: "pointer" }} // makes it visually clickable
+            >
+              <h2>#{assignment.id}</h2>
+              <p>{assignment.task}</p>
+              <span
+                className={`status-${assignment.status.replace(" ", "\\ ")}`}
+              >
+                {assignment.status === "Pending"
+                  ? "make appointment"
+                  : "consltation"}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );

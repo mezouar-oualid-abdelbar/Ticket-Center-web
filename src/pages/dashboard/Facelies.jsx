@@ -3,7 +3,7 @@ import { faUserTie, faUser, faPencil } from "@fortawesome/free-solid-svg-icons";
 
 export default function Facelities() {
   return (
-    <>
+    <div className="route-container">
       <h1>Manage facilities</h1>
       <a href="">create facilities</a>
       <div className="assignment-grid">
@@ -42,6 +42,6 @@ export default function Facelities() {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import "./styles/global.css";
-// import './App.css'
-import "./styles/global.css";
+
 import Navbar from "./components/navbar/Navbar";
 import HomePage from "./pages/HomePage";
 import AssignmentPage from "./pages/Technician/AssignmentPage";
@@ -16,11 +16,31 @@ import Progress from "./pages/Manage/Progress";
 import WorkersManagement from "./pages/dashboard/WorkersManagement";
 import Login from "./pages/Login";
 
+import echo from "./services/echo";
+
 function App() {
   const [count, setCount] = useState(0);
 
+  useEffect(() => {
+    const channel = echo.channel("notifications");
+
+    channel.subscribed(() => {
+      console.log("Subscribed to notifications channel!");
+    });
+
+    channel.listen(".MessageNotification", (e) => {
+      console.log("Broadcast received:", e);
+    });
+
+    return () => {
+      echo.leave("notifications");
+    };
+  }, []);
+
   return (
     <BrowserRouter>
+      <Navbar />
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />

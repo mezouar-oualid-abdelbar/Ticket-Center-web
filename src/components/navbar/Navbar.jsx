@@ -14,12 +14,15 @@ import {
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 
+import "../../styles/navbar.css";
+
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
 import { useTheme } from "../../hooks/useTheme";
 import { useDropdown } from "../../hooks/useDropdown";
 import { useNotifications } from "../../hooks/useNotifications";
+import useLogout from "../../hooks/useLogout";
 
 import ChatBox from "../ChatBox";
 
@@ -27,7 +30,7 @@ function Navbar() {
   /* ================= HOOKS ================= */
 
   const { isDark, toggleTheme } = useTheme();
-
+  const { logout, loading } = useLogout();
   const profile = useDropdown();
   const notif = useDropdown();
   const msg = useDropdown();
@@ -171,10 +174,14 @@ function Navbar() {
 
                 <div className="dropdown-divider"></div>
 
-                <div className="dropdown-item danger">
+                <button
+                  onClick={logout}
+                  disabled={loading}
+                  className="dropdown-item danger"
+                >
                   <FontAwesomeIcon icon={faRightFromBracket} />
-                  Logout
-                </div>
+                  {loading ? "Logging out..." : "Logout"}
+                </button>
               </div>
             )}
           </div>

@@ -1,6 +1,8 @@
 import { assigmentApi } from "../../api/assigment";
 import Navbar from "../../components/navbar/Navbar";
 
+import "../../styles/table.css";
+
 export default function ManagerAssignmentPage() {
   const assignments = assigmentApi.getAssigments();
   return (
@@ -10,7 +12,7 @@ export default function ManagerAssignmentPage() {
       <div className="route-container">
         <h1>Manage Assignments</h1>
 
-        <div className="assignment-grid">
+        <div className="grid">
           <table>
             <thead>
               <tr>

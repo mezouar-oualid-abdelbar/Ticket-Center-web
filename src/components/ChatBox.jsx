@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-
+import "../styles/chatbox.css";
 export default function ChatBox() {
   const [text, setText] = useState("");
   const [minimized, setMinimized] = useState(false);

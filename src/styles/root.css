@@ -1,0 +1,44 @@
+html.light {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+:root,
+/* ---------- LIGHT ORANGE THEME ---------- */
+html.light {
+  --bg: #fffaf0; /* very light warm background */
+  --fg: #3a2f1b; /* dark brown text for contrast */
+  --accent: #ff7f11; /* bright orange for buttons & highlights */
+  --muted: rgba(58, 47, 27, 0.55); /* lighter brown for secondary text */
+  --card-bg: #fff2e0; /* soft orange card background */
+  --card-border: rgba(255, 127, 17, 0.2); /* subtle border in accent tone */
+  --glass: rgba(255, 127, 17, 0.08); /* translucent hint of orange */
+  --radius: 12px;
+  --shadow: 0 6px 18px rgba(255, 127, 17, 0.15);
+  --success: #a4ff11;
+  --danger: #ff3511;
+  --mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono",
+    monospace;
+}
+
+/* ---------- DARK THEME ---------- */
+html.dark {
+  --bg: #0d1117; /* very dark blue-black */
+  --fg: #e0e6f2; /* soft off-white text */
+  --accent: #ff9f43; /* warm orange accent */
+  --muted: rgba(224, 230, 242, 0.55); /* muted text */
+  --card-bg: rgba(255, 159, 67, 0.05); /* subtle translucent orange cards */
+  --card-border: rgba(255, 159, 67, 0.12); /* border in orange */
+  --glass: rgba(255, 159, 67, 0.08); /* translucent accent effect */
+  --radius: 12px;
+  --shadow: 0 8px 26px rgba(0, 0, 0, 0.6); /* stronger shadow for depth */
+  --success: #a4ff11;
+  --danger: #ff3511;
+  --mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono",
+    monospace;
+}

@@ -1,6 +1,8 @@
 import { assigmentApi } from "../../api/assigment";
 import Navbar from "../../components/navbar/Navbar";
 
+import "../../styles/widget.css";
+
 export default function AssignmentPage() {
   const assignments = assigmentApi.getAssigments();
 
@@ -17,11 +19,11 @@ export default function AssignmentPage() {
 
       <div className="route-container">
         <h1>Your Assignments</h1>
-        <div className="assignment-grid">
+        <div className="grid">
           {filteredAssignments.map((assignment) => (
             <div
               key={assignment.id}
-              className="assignment-widget"
+              className="widget"
               onClick={() => handleAssignmentClick(assignment)}
               style={{ cursor: "pointer" }} // makes it visually clickable
             >

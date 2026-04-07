@@ -1,62 +1,63 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./features/auth/ProtectedRoute";
+import LoginPage from "./features/auth/pages/Login";
+import HomePage from "./features/default/pages/HomePage";
+import Ticket from "./features/manager/pages/Tickets";
+import CreateAssignment from "./features/manager/pages/CreateAssigment";
+import CreateTicket from "./features/default/pages/CreateTicket";
+import Progress from "./features/manager/pages/Progress";
+import NotFound from "./features/default/pages/Notfound";
+import Assignments from "./features/Technician/pages/Assignments";
+import Assigment from "./features/Technician/pages/Assigment";
+import Unauthorized from "./features/default/pages/unauthorized";
 
-import "./styles/global.css";
-
-import Navbar from "./components/navbar/Navbar";
-import HomePage from "./pages/HomePage";
-import AssignmentPage from "./pages/Technician/AssignmentPage";
-import UpdateAssigment from "./pages/Technician/UpdateAssigment";
-import ManagerAssignmentPage from "./pages/Manage/ManagerAssignmentPage";
-import AssignUser from "./pages/Manage/AssignUser";
-import CreateAssigment from "./pages/default/CreateAssigment";
-import Dashboard from "./pages/dashboard/Dashboard";
-import Facelities from "./pages/dashboard/Facelies";
-import Progress from "./pages/Manage/Progress";
-import WorkersManagement from "./pages/dashboard/WorkersManagement";
-import Login from "./pages/Login";
-
-import echo from "./services/echo";
-
-function App() {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const channel = echo.channel("notifications");
-
-    channel.subscribed(() => {
-      console.log("Subscribed to notifications channel!");
-    });
-
-    channel.listen(".MessageNotification", (e) => {
-      console.log("Broadcast received:", e);
-    });
-
-    return () => {
-      echo.leave("notifications");
-    };
-  }, []);
-
+export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
+      {/* Public */}
+
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route path="/404" element={<NotFound />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
+      {/* Protected */}
+
+      {/* default */}
+
+      <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/technician/assignments" element={<AssignmentPage />} />
-        <Route path="/manage/assignments" element={<ManagerAssignmentPage />} />
-        <Route path="/assign/:id" element={<AssignUser />} />
+      </Route>
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/createTicket" element={<CreateTicket />} />
+      </Route>
+
+      {/* manager */}
+
+      <Route element={<ProtectedRoute roles={["admin", "manager"]} />}>
+        <Route path="/manager/tickets" element={<Ticket />} />
+      </Route>
+
+      <Route element={<ProtectedRoute roles={["admin", "manager"]} />}>
+        <Route path="/assign/:id" element={<CreateAssignment />} />
+      </Route>
+
+      <Route element={<ProtectedRoute roles={["admin", "manager"]} />}>
         <Route path="/progress/:id" element={<Progress />} />
-        <Route path="/createAssigment" element={<CreateAssigment />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/facelities" element={<Facelities />} />
-        <Route
-          path="/dashboard/workersManagement"
-          element={<WorkersManagement />}
-        />
-        <Route path="/UpdateAssigment/:id" element={<UpdateAssigment />} />
-      </Routes>
-    </BrowserRouter>
+      </Route>
+
+      {/* technician*/}
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/technician/assignments" element={<Assignments />} />
+      </Route>
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/technician/assignment/:id" element={<Assigment />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/404" replace />} />
+    </Routes>
   );
 }
-
-export default App;

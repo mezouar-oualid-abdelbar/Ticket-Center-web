@@ -1,16 +1,15 @@
-import { useParams } from "react-router-dom";
+// Assignment.jsx
+import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import Navbar from "../../../components/layout/Navbar";
-
 import Appointment from "../components/Appointment";
-import Consultation from "../components/Consltation";
-
-import { useAssignment } from "../hooks/useAssigment";
+import Consultation from "../components/Consultation"; // fix typo
+import { useAssignment } from "../hooks/useAssignment"; // fix typo
 
 export default function Assignment() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { assignment, loading, error } = useAssignment(id);
-
   const [showAppointment, setShowAppointment] = useState(false);
   const [currentInterventionId, setCurrentInterventionId] = useState(null);
 
@@ -22,7 +21,6 @@ export default function Assignment() {
   const interventions = ticket?.interventions || [];
   const ticketId = ticket?.id;
 
-  // Find first intervention without a note
   const interventionWithEmptyNote = interventions.find((i) => !i.note);
 
   return (
@@ -32,29 +30,27 @@ export default function Assignment() {
         <h1>{ticket?.title || "No Title"}</h1>
         <p>{ticket?.description || "No Description"}</p>
 
-        {/* Consultation Form */}
-        {interventionWithEmptyNote && !showAppointment ? (
+        {/* Consultation Form — shown when there's an incomplete intervention */}
+        {interventionWithEmptyNote && !showAppointment && (
           <Consultation
             interventionid={interventionWithEmptyNote.id}
             onComplete={(interventionId) => {
               setCurrentInterventionId(interventionId);
-              setShowAppointment(true); // show appointment after consultation
+              setShowAppointment(true);
             }}
           />
-        ) : null}
+        )}
 
         {/* Appointment Form */}
         {ticketId && showAppointment && (
           <Appointment
             ticketId={ticketId}
-            onSuccess={() => {
-              setShowAppointment(false);
-              setCurrentInterventionId(null);
-            }}
+            interventionId={currentInterventionId} // ← pass it down
+            onSuccess={() => navigate("/technician/assignments")}
           />
         )}
 
-        {/* Fallback button */}
+        {/* Fallback: no pending consultation, no appointment shown yet */}
         {!showAppointment && !interventionWithEmptyNote && (
           <button onClick={() => setShowAppointment(true)}>
             Make Appointment
@@ -64,10 +60,14 @@ export default function Assignment() {
         {/* Interventions List */}
         <div style={{ marginTop: 20 }}>
           <h3>Interventions</h3>
-          {interventions.map((i, index) => (
-            <div key={index} style={{ marginBottom: 10 }}>
-              <strong>{i.appointment || "No appointment yet"}</strong>
-              <p>{i.note || "No note yet"}</p>
+          {interventions.map((intervention) => (
+            <div key={intervention.id} style={{ marginBottom: 10 }}>
+              {" "}
+              {/* use .id */}
+              <strong>
+                {intervention.appointment || "No appointment yet"}
+              </strong>
+              <p>{intervention.note || "No note yet"}</p>
             </div>
           ))}
         </div>

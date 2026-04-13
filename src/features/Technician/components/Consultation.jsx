@@ -1,19 +1,23 @@
 import { useState } from "react";
-import { completeAppointment } from "../api"; // fix path
+import { completeAppointment } from "../api";
+import { useNavigate } from "react-router-dom";
 
 export default function Consultation({ interventionid, onComplete }) {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const navigate = useNavigate();
 
   const handleUpdate = async () => {
-    if (!note.trim()) return;
-
+    if (!note.trim()) {
+      alert("Please write a consultation note.");
+      return;
+    }
     setLoading(true);
-
     try {
       await completeAppointment(interventionid, { note });
       alert("Consultation updated!");
-      onComplete?.(interventionid); // trigger appointment form in parent
+      onComplete?.(interventionid);
     } catch (err) {
       console.error(err);
       alert("Error updating consultation");
@@ -22,35 +26,53 @@ export default function Consultation({ interventionid, onComplete }) {
     }
   };
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
     if (!window.confirm("End this assignment?")) return;
-    console.log("End assignment for:", interventionid);
+    if (!note.trim()) {
+      alert("Please add a note before ending the assignment.");
+      return;
+    }
+    setEnding(true);
+    try {
+      await completeAppointment(interventionid, { note, status: "completed" });
+      alert("Assignment ended successfully!");
+      navigate("/technician/assignments");
+    } catch (err) {
+      console.error(err);
+      alert("Error ending assignment");
+    } finally {
+      setEnding(false);
+    }
   };
 
   return (
     <div style={wrapper}>
       <header style={header}>Add Consultation</header>
-
       <textarea
         placeholder="Write consultation details..."
         value={note}
         onChange={(e) => setNote(e.target.value)}
         style={textarea}
       />
-
       <div style={actions}>
-        <button onClick={handleUpdate} disabled={loading} style={primaryBtn}>
+        <button
+          onClick={handleUpdate}
+          disabled={loading || ending}
+          style={primaryBtn}
+        >
           {loading ? "Updating..." : "Update Consultation"}
         </button>
-        <button onClick={handleEnd} style={dangerBtn}>
-          End Assignment
+        <button
+          onClick={handleEnd}
+          disabled={ending || loading}
+          style={dangerBtn}
+        >
+          {ending ? "Ending..." : "End Assignment"}
         </button>
       </div>
     </div>
   );
 }
-
-/* ================= STYLES ================= */
 
 const wrapper = {
   background: "var(--card-bg)",
@@ -60,14 +82,12 @@ const wrapper = {
   boxShadow: "var(--shadow)",
   maxWidth: 500,
 };
-
 const header = {
   fontSize: 18,
   fontWeight: 700,
   marginBottom: 16,
   color: "var(--fg)",
 };
-
 const textarea = {
   width: "100%",
   minHeight: 120,
@@ -81,12 +101,10 @@ const textarea = {
   fontFamily: "inherit",
   marginBottom: 16,
 };
-
 const actions = {
   display: "flex",
   gap: 12,
 };
-
 const primaryBtn = {
   flex: 1,
   padding: "10px 16px",
@@ -97,7 +115,6 @@ const primaryBtn = {
   fontWeight: 600,
   cursor: "pointer",
 };
-
 const dangerBtn = {
   flex: 1,
   padding: "10px 16px",

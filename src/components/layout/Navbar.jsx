@@ -36,6 +36,7 @@ function Navbar() {
   const profile = useDropdown();
   const notif = useDropdown();
   const msg = useDropdown();
+  const canManageTickets = useHasRole(["manager", "admin"]);
 
   const { notifications, unreadCount, markAllRead } = useNotifications();
 
@@ -67,7 +68,7 @@ function Navbar() {
           <Link to="/technician/assignments" className="nav-icon">
             <FontAwesomeIcon icon={faClipboardList} />
           </Link>
-          {useHasRole(["manager", "admin"]) && (
+          {canManageTickets && (
             <Link to="/manager/tickets" className="nav-icon">
               <FontAwesomeIcon icon={faUserGear} />
             </Link>

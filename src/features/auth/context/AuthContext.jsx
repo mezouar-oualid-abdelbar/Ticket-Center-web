@@ -3,7 +3,6 @@ import { http } from "../../../services/api/http";
 
 export const AuthContext = createContext(null);
 
-// Hook to use AuthContext
 export function useAuthContext() {
   return useContext(AuthContext);
 }
@@ -14,14 +13,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       setLoading(false);
       return;
     }
-
     http
-      .get("me") // adjust endpoint to match your backend
+      .get("me")
       .then((res) => setUser(res.data))
       .catch(() => {
         localStorage.removeItem("token");

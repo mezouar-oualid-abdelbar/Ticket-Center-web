@@ -34,15 +34,15 @@ export default function App() {
 
       {/* manager */}
 
-      <Route element={<ProtectedRoute roles={["admin", "manager"]} />}>
+      <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
         <Route path="/manager/tickets" element={<Ticket />} />
       </Route>
 
-      <Route element={<ProtectedRoute roles={["admin", "manager"]} />}>
+      <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
         <Route path="/assign/:id" element={<CreateAssignment />} />
       </Route>
 
-      <Route element={<ProtectedRoute roles={["admin", "manager"]} />}>
+      <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
         <Route path="/progress/:id" element={<Progress />} />
       </Route>
 

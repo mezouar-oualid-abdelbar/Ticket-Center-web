@@ -1,120 +1,247 @@
-import { useState, useEffect } from "react";
+// src/features/manager/pages/Progress.jsx  (UPDATED — with Chat button)
+
 import { useParams } from "react-router-dom";
+import { useState } from "react";
 import Navbar from "../../../components/layout/Navbar";
-import { getTiketProgress } from "../api"; // your API function
+import ChatBox from "../../../components/ChatBox";
+import { http } from "../../../services/api/http";
+import { useEffect } from "react";
+
+const statusColors = {
+  open: "#6c757d",
+  assigned: "#0d6efd",
+  in_progress: "#fd7e14",
+  resolved: "#198754",
+  closed: "#343a40",
+};
 
 export default function Progress() {
   const { id } = useParams();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
-    async function fetchTicket() {
-      try {
-        const data = await getTiketProgress(id);
-        setTicket(data);
-      } catch (err) {
-        setError(err.message || "Failed to fetch ticket");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTicket();
+    http
+      .get(`manager/ticket/${id}/progress`)
+      .then((res) => setTicket(res.data))
+      .catch(() => setError("Failed to load ticket progress."))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <p>Loading ticket data...</p>;
-  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
-  if (!ticket) return <p>Ticket not found</p>;
+  if (loading)
+    return (
+      <>
+        <Navbar />
+        <div className="route-container">
+          <p>Loading…</p>
+        </div>
+      </>
+    );
+  if (error)
+    return (
+      <>
+        <Navbar />
+        <div className="route-container">
+          <p style={{ color: "var(--danger)" }}>{error}</p>
+        </div>
+      </>
+    );
+  if (!ticket)
+    return (
+      <>
+        <Navbar />
+        <div className="route-container">
+          <p>Ticket not found.</p>
+        </div>
+      </>
+    );
+
+  const color = statusColors[ticket.status] || "#6c757d";
 
   return (
-    <div>
+    <>
       <Navbar />
-
       <div className="route-container">
-        <h1>{ticket.title}</h1>
-        <p>
-          <strong>Description:</strong> {ticket.description}
-        </p>
-        <p>
-          <strong>Priority:</strong> {ticket.priority}
-        </p>
-        <p>
-          <strong>Status:</strong> {ticket.status}
-        </p>
-        <p>
-          <strong>Completed At:</strong>{" "}
-          {ticket.completed_at || "Not completed yet"}
-        </p>
-
-        {/* =================== ASSIGNMENTS =================== */}
-        <h2>Assignments</h2>
-        {ticket.assigments && ticket.assigments.length > 0 ? (
-          ticket.assigments.map((assignment) => (
-            <div
-              key={assignment.id}
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <div>
+            <h1 style={{ margin: "0 0 6px", fontSize: "1.5rem" }}>
+              {ticket.title || `Ticket #${ticket.id}`}
+            </h1>
+            <span
               style={{
-                borderRadius: "8px",
-                padding: "15px",
-                marginBottom: "15px",
-                border: "1px solid #ccc",
+                display: "inline-block",
+                padding: "4px 14px",
+                borderRadius: 20,
+                background: color,
+                color: "#fff",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                textTransform: "capitalize",
               }}
             >
-              <p>
-                <strong>Created At:</strong> {assignment.created_at}
-              </p>
-              <p>
-                <strong>Leader:</strong> {assignment.leader?.name} (
-                {assignment.leader?.email})
-              </p>
-              <p>
-                <strong>Dispatcher:</strong> {assignment.dispatcher?.name} (
-                {assignment.dispatcher?.email})
-              </p>
+              {ticket.status?.replace("_", " ")}
+            </span>
+          </div>
+          <button
+            onClick={() => setChatOpen((o) => !o)}
+            style={{
+              background: "var(--accent)",
+              border: "none",
+              borderRadius: 10,
+              padding: "10px 20px",
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
+              fontSize: "0.95rem",
+            }}
+          >
+            {chatOpen ? "✕ Close Chat" : "💬 Open Chat"}
+          </button>
+        </div>
 
-              <h3>Technicians</h3>
-              {assignment.technicians && assignment.technicians.length > 0 ? (
-                <ul>
+        {/* Description */}
+        <div
+          style={{
+            background: "var(--card-bg)",
+            border: "1px solid var(--card-border)",
+            borderRadius: "var(--radius)",
+            padding: "16px 20px",
+          }}
+        >
+          <h3
+            style={{
+              margin: "0 0 8px",
+              fontSize: "0.9rem",
+              color: "var(--muted)",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+            }}
+          >
+            Description
+          </h3>
+          <p style={{ margin: 0, lineHeight: 1.7 }}>{ticket.description}</p>
+        </div>
+
+        {/* Assignments */}
+        {ticket.assigments?.map((assignment) => (
+          <div
+            key={assignment.id}
+            style={{
+              background: "var(--card-bg)",
+              border: "1px solid var(--card-border)",
+              borderRadius: "var(--radius)",
+              padding: "16px 20px",
+            }}
+          >
+            <h3 style={{ margin: "0 0 12px", fontSize: "1rem" }}>
+              Assignment #{assignment.id}
+            </h3>
+
+            {assignment.leader && (
+              <p style={{ margin: "0 0 8px", fontSize: "0.9rem" }}>
+                <span style={{ color: "var(--muted)", fontWeight: 600 }}>
+                  Leader:{" "}
+                </span>
+                {assignment.leader.name}
+              </p>
+            )}
+
+            {assignment.technicians?.length > 0 && (
+              <div>
+                <span
+                  style={{
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Technicians:{" "}
+                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
+                    marginTop: 6,
+                  }}
+                >
                   {assignment.technicians.map((tech) => (
-                    <li key={tech.id}>
-                      {tech.name} - {tech.email} (ID: {tech.id})
-                    </li>
+                    <span
+                      key={tech.id}
+                      style={{
+                        background: "var(--glass)",
+                        border: "1px solid var(--card-border)",
+                        borderRadius: 20,
+                        padding: "3px 12px",
+                        fontSize: "0.82rem",
+                      }}
+                    >
+                      {tech.name}
+                    </span>
                   ))}
-                </ul>
-              ) : (
-                <p>No technicians assigned</p>
-              )}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Interventions */}
+        {ticket.interventions?.length > 0 && (
+          <div>
+            <h3 style={{ margin: "0 0 12px" }}>Interventions</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {ticket.interventions.map((iv) => (
+                <div
+                  key={iv.id}
+                  style={{
+                    background: "var(--card-bg)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "var(--radius)",
+                    padding: "14px 18px",
+                  }}
+                >
+                  <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                    📅{" "}
+                    {iv.appointment
+                      ? new Date(iv.appointment).toLocaleString()
+                      : "No appointment set"}
+                  </div>
+                  <div style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+                    {iv.note || "No note yet."}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))
-        ) : (
-          <p>No assignments found</p>
+          </div>
         )}
 
-        {/* =================== INTERVENTIONS =================== */}
-        <h2>Interventions</h2>
-        {ticket.interventions && ticket.interventions.length > 0 ? (
-          ticket.interventions.map((intervention, idx) => (
-            <div
-              key={idx}
-              style={{
-                borderRadius: "8px",
-                padding: "15px",
-                marginBottom: "15px",
-                border: "1px solid #ccc",
-              }}
-            >
-              <p>
-                <strong>Appointment:</strong> {intervention.appointment}
-              </p>
-              <p>
-                <strong>Note:</strong> {intervention.note}
-              </p>
-            </div>
-          ))
-        ) : (
-          <p>No interventions recorded</p>
+        {ticket.completed_at && (
+          <p style={{ color: "var(--success)", fontWeight: 600 }}>
+            ✓ Completed at: {new Date(ticket.completed_at).toLocaleString()}
+          </p>
         )}
       </div>
-    </div>
+
+      {/* Chat */}
+      {chatOpen && (
+        <ChatBox
+          ticketId={ticket.id}
+          ticketTitle={ticket.title || `Ticket #${ticket.id}`}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
+    </>
   );
 }

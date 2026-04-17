@@ -1,6 +1,7 @@
-// src/features/auth/pages/Login.jsx
+// src/features/auth/pages/Login.jsx  (UPDATED — links now active)
 
 import "../login.css";
+import { Link } from "react-router-dom";
 import { useLogin } from "../hooks/useLogin";
 
 function Login() {
@@ -25,12 +26,10 @@ function Login() {
       <div className="fb-right">
         <div className="login-box">
           <form onSubmit={handleSubmit} noValidate>
-            {/* Server-level error */}
             {serverError && (
               <p className="error-message server-error">{serverError}</p>
             )}
 
-            {/* Email */}
             <input
               type="email"
               name="email"
@@ -42,7 +41,6 @@ function Login() {
             />
             {errors.email && <p className="error-message">{errors.email}</p>}
 
-            {/* Password */}
             <input
               type="password"
               name="password"
@@ -60,19 +58,21 @@ function Login() {
               {isLoading ? "Logging in..." : "Log In"}
             </button>
 
-            {/* <a href="/forgot-password" className="forgot">
+            <Link to="/forgot-password" className="forgot">
               Forgotten password?
-            </a>
+            </Link>
 
             <hr />
 
-            <button
-              type="button"
-              className="signup-btn"
-              onClick={() => (window.location.href = "/register")}
-            >
-              Create New Account
-            </button> */}
+            <Link to="/register">
+              <button
+                type="button"
+                className="signup-btn"
+                style={{ width: "100%" }}
+              >
+                Create New Account
+              </button>
+            </Link>
           </form>
         </div>
       </div>

@@ -1,29 +1,41 @@
+// src/App.jsx  (UPDATED — added register, forgot-password, reset-password routes)
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./features/auth/ProtectedRoute";
+
+// Auth pages
 import LoginPage from "./features/auth/pages/Login";
+import RegisterPage from "./features/auth/pages/Register";
+import ForgotPasswordPage from "./features/auth/pages/ForgotPassword";
+import ResetPasswordPage from "./features/auth/pages/ResetPassword";
+
+// Default pages
 import HomePage from "./features/default/pages/HomePage";
+import CreateTicket from "./features/default/pages/CreateTicket";
+import NotFound from "./features/default/pages/Notfound";
+import Unauthorized from "./features/default/pages/unauthorized";
+
+// Manager pages
 import Ticket from "./features/manager/pages/Tickets";
 import CreateAssignment from "./features/manager/pages/CreateAssigment";
-import CreateTicket from "./features/default/pages/CreateTicket";
 import Progress from "./features/manager/pages/Progress";
-import NotFound from "./features/default/pages/Notfound";
+
+// Technician pages
 import Assignments from "./features/Technician/pages/Assignments";
 import Assigment from "./features/Technician/pages/Assigment";
-import Unauthorized from "./features/default/pages/unauthorized";
 
 export default function App() {
   return (
     <Routes>
-      {/* Public */}
-
+      {/* ── Public ────────────────────────────────── */}
       <Route path="/login" element={<LoginPage />} />
-
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/404" element={<NotFound />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-      {/* Protected */}
 
-      {/* default */}
-
+      {/* ── Protected: all authenticated users ───── */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HomePage />} />
       </Route>
@@ -32,8 +44,15 @@ export default function App() {
         <Route path="/createTicket" element={<CreateTicket />} />
       </Route>
 
-      {/* manager */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/technician/assignments" element={<Assignments />} />
+      </Route>
 
+      <Route element={<ProtectedRoute />}>
+        <Route path="/technician/assignment/:id" element={<Assigment />} />
+      </Route>
+
+      {/* ── Protected: manager / admin ────────────── */}
       <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
         <Route path="/manager/tickets" element={<Ticket />} />
       </Route>
@@ -46,17 +65,7 @@ export default function App() {
         <Route path="/progress/:id" element={<Progress />} />
       </Route>
 
-      {/* technician*/}
-
-      <Route element={<ProtectedRoute />}>
-        <Route path="/technician/assignments" element={<Assignments />} />
-      </Route>
-
-      <Route element={<ProtectedRoute />}>
-        <Route path="/technician/assignment/:id" element={<Assigment />} />
-      </Route>
-
-      {/* Fallback */}
+      {/* ── Fallback ──────────────────────────────── */}
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );

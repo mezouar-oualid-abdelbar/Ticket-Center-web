@@ -1,8 +1,4 @@
-// src/components/layout/Navbar.jsx  (FULLY UPDATED)
-// • Real notifications from useNotifications (Pusher)
-// • Messages panel opens the real ChatBox per ticket
-// • Mobile hamburger menu with slide-out drawer
-// • Avatar shows first letter of logged-in user name
+// src/components/layout/Navbar.jsx
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -26,54 +22,77 @@ import {
 import { useHasRole } from "../../utils/roles";
 import "../../styles/navbar.css";
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useTheme } from "../../hooks/useTheme";
 import { useDropdown } from "../../hooks/useDropdown";
 import { useNotifications } from "../../hooks/useNotifications";
 import useLogout from "../../hooks/useLogout";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
+import { http } from "../../services/api/http";
 import ChatBox from "../ChatBox";
 
-/* ── notification icon per type ── */
 const notifIcon = {
   assignment: "📋",
   resolved: "✅",
   message: "💬",
   info: "ℹ️",
 };
-const fmt = (d) =>
+const fmtTime = (d) =>
   new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-function Navbar() {
-  /* ─ hooks ─ */
+const statusLabel = {
+  open: "Open",
+  assigned: "Assigned",
+  in_progress: "In Progress",
+};
+const statusColor = {
+  open: "#6c757d",
+  assigned: "#0d6efd",
+  in_progress: "#fd7e14",
+};
+
+export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const { logout, loading: logoutLoading } = useLogout();
   const { user } = useAuthContext();
   const profile = useDropdown();
   const notif = useDropdown();
-  const msg = useDropdown();
+  const msgDropdown = useDropdown();
   const canManageTickets = useHasRole(["manager", "admin"]);
   const location = useLocation();
 
-  const { notifications, unreadCount, markAllRead, markRead, clearAll } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    unreadMessages,
+    markAllRead,
+    markRead,
+    clearAll,
+  } = useNotifications();
 
-  /* chat: { ticketId, ticketTitle } | null */
-  const [activeChat, setActiveChat] = useState(null);
+  const [activeChat, setActiveChat] = useState(null); // { ticketId, ticketTitle }
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [myTickets, setMyTickets] = useState([]);
+
+  // Load the user's unresolved tickets for the messages dropdown
+  useEffect(() => {
+    if (!user) return;
+    http
+      .get("my-tickets")
+      .then((r) => setMyTickets(r.data))
+      .catch(() => {});
+  }, [user]);
 
   const initials = user?.name ? user.name[0].toUpperCase() : "?";
   const isActive = (path) => location.pathname === path;
 
-  /* nav links config */
   const navLinks = [
-    { to: "/", icon: faHouse, label: "Home", always: true },
+    { to: "/", icon: faHouse, label: "Home" },
     {
       to: "/technician/assignments",
       icon: faClipboardList,
       label: "Assignments",
-      always: true,
     },
     {
       to: "/manager/tickets",
@@ -81,19 +100,32 @@ function Navbar() {
       label: "Tickets",
       managerOnly: true,
     },
-    { to: "/createTicket", icon: faTicket, label: "New Ticket", always: true },
-    { to: "/dashboard", icon: faChartLine, label: "Dashboard", always: true },
+    { to: "/createTicket", icon: faTicket, label: "New Ticket" },
   ];
+
+  const closeAll = () => {
+    notif.setOpen(false);
+    msgDropdown.setOpen(false);
+    profile.setOpen(false);
+  };
+
+  const openChat = (ticket) => {
+    setActiveChat({
+      ticketId: ticket.id,
+      ticketTitle: ticket.title || `Ticket #${ticket.id}`,
+    });
+    msgDropdown.setOpen(false);
+  };
 
   return (
     <>
       <nav className="fb-navbar">
-        {/* ── LEFT ── */}
+        {/* LEFT */}
         <div className="nav-left">
           <div className="logo">TC</div>
         </div>
 
-        {/* ── CENTER (desktop) ── */}
+        {/* CENTER */}
         <div className="nav-center nav-center-desktop">
           {navLinks.map(({ to, icon, label, managerOnly }) => {
             if (managerOnly && !canManageTickets) return null;
@@ -110,16 +142,92 @@ function Navbar() {
           })}
         </div>
 
-        {/* ── RIGHT ── */}
+        {/* RIGHT */}
         <div className="nav-right">
-          {/* NOTIFICATIONS */}
+          {/* ── MESSAGES dropdown ── */}
+          <div className="dropdown-wrapper" ref={msgDropdown.ref}>
+            <div
+              className="nav-icon badge-wrapper"
+              onClick={() => {
+                closeAll();
+                msgDropdown.setOpen(!msgDropdown.open);
+              }}
+            >
+              <FontAwesomeIcon icon={faEnvelope} />
+              {unreadMessages.length > 0 && (
+                <span className="badge">
+                  {unreadMessages.length > 9 ? "9+" : unreadMessages.length}
+                </span>
+              )}
+            </div>
+
+            {msgDropdown.open && (
+              <div className="dropdown-panel">
+                <div className="panel-header">
+                  <span>Messages</span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+                    {myTickets.length} active ticket
+                    {myTickets.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="panel-list">
+                  {myTickets.length === 0 ? (
+                    <div className="panel-empty">No active tickets</div>
+                  ) : (
+                    myTickets.map((t) => (
+                      <div
+                        key={t.id}
+                        className="panel-item"
+                        onClick={() => openChat(t)}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              fontSize: "0.87rem",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {t.title || `Ticket #${t.id}`}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.72rem",
+                              color: "var(--muted)",
+                              marginTop: 2,
+                            }}
+                          >
+                            #{t.id}
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                            color: statusColor[t.status] || "#6c757d",
+                            flexShrink: 0,
+                            marginLeft: 8,
+                          }}
+                        >
+                          {statusLabel[t.status] || t.status}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── NOTIFICATIONS dropdown ── */}
           <div className="dropdown-wrapper" ref={notif.ref}>
             <div
               className="nav-icon badge-wrapper"
               onClick={() => {
+                closeAll();
                 notif.setOpen(!notif.open);
-                msg.setOpen(false);
-                profile.setOpen(false);
               }}
             >
               <FontAwesomeIcon icon={faBell} />
@@ -134,7 +242,7 @@ function Navbar() {
               <div className="dropdown-panel">
                 <div className="panel-header">
                   <span>Notifications</span>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 6 }}>
                     {unreadCount > 0 && (
                       <button onClick={markAllRead} title="Mark all read">
                         <FontAwesomeIcon icon={faCheck} />
@@ -151,102 +259,71 @@ function Navbar() {
                     )}
                   </div>
                 </div>
-
                 <div className="panel-list">
-                  {notifications.length === 0 && (
+                  {notifications.length === 0 ? (
                     <div className="panel-empty">No notifications yet</div>
-                  )}
-                  {notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className={`panel-item ${n.unread ? "unread" : ""}`}
-                      onClick={() => markRead(n.id)}
-                    >
-                      <span style={{ marginRight: 8 }}>
-                        {notifIcon[n.type] || "🔔"}
-                      </span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "0.87rem" }}>{n.text}</div>
-                        {n.time && (
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={`panel-item ${n.unread ? "unread" : ""}`}
+                        onClick={() => {
+                          markRead(n.id);
+                          if (n.meta?.ticketId) {
+                            openChat({
+                              id: n.meta.ticketId,
+                              title: n.meta.ticketTitle,
+                            });
+                          }
+                        }}
+                      >
+                        <span style={{ marginRight: 8, flexShrink: 0 }}>
+                          {notifIcon[n.type] || "🔔"}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div
-                            style={{
-                              fontSize: "0.72rem",
-                              color: "var(--muted)",
-                              marginTop: 2,
-                            }}
+                            style={{ fontSize: "0.85rem", lineHeight: 1.35 }}
                           >
-                            {fmt(n.time)}
+                            {n.text}
                           </div>
+                          {n.time && (
+                            <div
+                              style={{
+                                fontSize: "0.7rem",
+                                color: "var(--muted)",
+                                marginTop: 2,
+                              }}
+                            >
+                              {fmtTime(n.time)}
+                            </div>
+                          )}
+                        </div>
+                        {n.unread && (
+                          <FontAwesomeIcon
+                            icon={faCircle}
+                            style={{
+                              fontSize: "0.4rem",
+                              color: "var(--accent)",
+                              flexShrink: 0,
+                              marginLeft: 6,
+                            }}
+                          />
                         )}
                       </div>
-                      {n.unread && (
-                        <FontAwesomeIcon
-                          icon={faCircle}
-                          style={{
-                            fontSize: "0.45rem",
-                            color: "var(--accent)",
-                            flexShrink: 0,
-                          }}
-                        />
-                      )}
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* MESSAGES (opens latest chat or a picker) */}
-          <div className="dropdown-wrapper" ref={msg.ref}>
-            <div
-              className="nav-icon badge-wrapper"
-              onClick={() => {
-                msg.setOpen(!msg.open);
-                notif.setOpen(false);
-                profile.setOpen(false);
-              }}
-            >
-              <FontAwesomeIcon icon={faEnvelope} />
-            </div>
-
-            {msg.open && (
-              <div className="dropdown-panel">
-                <div className="panel-header">
-                  <span>Messages</span>
-                </div>
-                <div className="panel-list">
-                  <div
-                    className="panel-empty"
-                    style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: 13,
-                      color: "var(--muted)",
-                    }}
-                  >
-                    Open a ticket to start chatting.
-                    <br />
-                    <Link
-                      to="/"
-                      style={{ color: "var(--accent)", fontSize: 13 }}
-                      onClick={() => msg.setOpen(false)}
-                    >
-                      Go to Home
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* PROFILE */}
+          {/* ── PROFILE ── */}
           <div className="dropdown-wrapper" ref={profile.ref}>
             <div
               className="avatar"
               onClick={() => {
+                closeAll();
                 profile.setOpen(!profile.open);
-                notif.setOpen(false);
-                msg.setOpen(false);
               }}
             >
               {initials}
@@ -254,7 +331,6 @@ function Navbar() {
 
             {profile.open && (
               <div className="profile-dropdown">
-                {/* user info */}
                 {user && (
                   <div
                     style={{
@@ -271,14 +347,6 @@ function Navbar() {
                   </div>
                 )}
 
-                <Link
-                  to="/settings"
-                  className="dropdown-item"
-                  onClick={() => profile.setOpen(false)}
-                >
-                  <FontAwesomeIcon icon={faGear} /> Settings
-                </Link>
-
                 <div
                   className="dropdown-item"
                   onClick={() => {
@@ -293,7 +361,10 @@ function Navbar() {
                 <div className="dropdown-divider" />
 
                 <button
-                  onClick={logout}
+                  onClick={() => {
+                    logout();
+                    profile.setOpen(false);
+                  }}
                   disabled={logoutLoading}
                   className="dropdown-item danger"
                   style={{
@@ -316,14 +387,14 @@ function Navbar() {
             )}
           </div>
 
-          {/* HAMBURGER (mobile) */}
+          {/* ── HAMBURGER ── */}
           <div className="hamburger" onClick={() => setMobileOpen((o) => !o)}>
             <FontAwesomeIcon icon={mobileOpen ? faTimes : faBars} />
           </div>
         </div>
       </nav>
 
-      {/* ── MOBILE DRAWER ── */}
+      {/* MOBILE DRAWER */}
       {mobileOpen && (
         <div className="mobile-drawer" onClick={() => setMobileOpen(false)}>
           <div
@@ -362,7 +433,7 @@ function Navbar() {
         </div>
       )}
 
-      {/* ── CHAT WINDOW ── */}
+      {/* CHAT WINDOW */}
       {activeChat && (
         <ChatBox
           ticketId={activeChat.ticketId}
@@ -373,12 +444,3 @@ function Navbar() {
     </>
   );
 }
-
-export default Navbar;
-
-/* ─ Export helper so pages can trigger a chat ─────────────────────────
-   Usage in any page:
-     import { openTicketChat } from "../../components/layout/Navbar";
-   Actually use a shared context or prop drilling.
-   See: useTicketChat hook below for a cleaner approach.
-────────────────────────────────────────────────────────────────────── */

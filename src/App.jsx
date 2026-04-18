@@ -1,5 +1,3 @@
-// src/App.jsx  (UPDATED — added register, forgot-password, reset-password routes)
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./features/auth/ProtectedRoute";
 
@@ -12,8 +10,8 @@ import ResetPasswordPage from "./features/auth/pages/ResetPassword";
 // Default pages
 import HomePage from "./features/default/pages/HomePage";
 import CreateTicket from "./features/default/pages/CreateTicket";
-import NotFound from "./features/default/pages/Notfound";
-import Unauthorized from "./features/default/pages/unauthorized";
+import NotFound from "./features/default/pages/NotFound";
+import Unauthorized from "./features/default/pages/Unauthorized";
 
 // Manager pages
 import Ticket from "./features/manager/pages/Tickets";
@@ -38,30 +36,15 @@ export default function App() {
       {/* ── Protected: all authenticated users ───── */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HomePage />} />
-      </Route>
-
-      <Route element={<ProtectedRoute />}>
         <Route path="/createTicket" element={<CreateTicket />} />
-      </Route>
-
-      <Route element={<ProtectedRoute />}>
         <Route path="/technician/assignments" element={<Assignments />} />
-      </Route>
-
-      <Route element={<ProtectedRoute />}>
         <Route path="/technician/assignment/:id" element={<Assigment />} />
       </Route>
 
       {/* ── Protected: manager / admin ────────────── */}
       <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
         <Route path="/manager/tickets" element={<Ticket />} />
-      </Route>
-
-      <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
         <Route path="/assign/:id" element={<CreateAssignment />} />
-      </Route>
-
-      <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
         <Route path="/progress/:id" element={<Progress />} />
       </Route>
 

@@ -1,15 +1,6 @@
 // src/components/ChatBox.jsx
-// Real-time chat for a ticket.
-// Props: ticketId (number), ticketTitle (string), onClose (fn)
-//
-// Who can chat:
-//   • The user who created the ticket (reporter)
-//   • The manager who dispatched it (dispatcher)
-//   • The leader technician
-//   • All technicians assigned via the pivot table
-//
-// Channel auth is enforced on the backend (routes/channels.php).
-// The frontend just subscribes — Reverb rejects unauthorised users automatically.
+// Real-time chat. Deduplication uses a seenIds Set so optimistic messages
+// are never doubled when the broadcast arrives.
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import "../styles/chatbox.css";
@@ -17,20 +8,19 @@ import { http } from "../services/api/http";
 import echo from "../services/socket/echo";
 import { useAuthContext } from "../features/auth/context/AuthContext";
 
-const fmt = (d) =>
+const fmtTime = (d) =>
   d
     ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
 
-// ── Avatar initials bubble ──────────────────────────────────
 function Avatar({ name, isMe }) {
-  const initials = (name || "?")[0].toUpperCase();
   return (
     <div
       style={{
         width: 28,
         height: 28,
         borderRadius: "50%",
+        flexShrink: 0,
         background: isMe ? "var(--accent)" : "var(--glass)",
         border: "1px solid var(--card-border)",
         display: "flex",
@@ -39,16 +29,14 @@ function Avatar({ name, isMe }) {
         fontSize: "0.7rem",
         fontWeight: 700,
         color: isMe ? "#fff" : "var(--fg)",
-        flexShrink: 0,
         userSelect: "none",
       }}
     >
-      {initials}
+      {(name || "?")[0].toUpperCase()}
     </div>
   );
 }
 
-// ── Main ────────────────────────────────────────────────────
 export default function ChatBox({
   ticketId,
   ticketTitle = "Ticket Chat",
@@ -65,54 +53,55 @@ export default function ChatBox({
 
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  // Tracks real server IDs so broadcast duplicates are dropped
+  const seenIds = useRef(new Set());
 
-  // ── 1. Load message history ─────────────────────────────
+  // ── 1. Load history ──────────────────────────────────────
   useEffect(() => {
     if (!ticketId) return;
-
     setLoading(true);
     setError("");
+    seenIds.current.clear();
 
     http
       .get(`messages/${ticketId}`)
-      .then((res) => setMessages(res.data))
+      .then((res) => {
+        const msgs = res.data;
+        msgs.forEach((m) => seenIds.current.add(m.id));
+        setMessages(msgs);
+      })
       .catch((err) => {
-        if (err.response?.status === 403) {
-          setError("You don't have access to this ticket's chat.");
-        } else {
-          setError("Failed to load messages. Please try again.");
-        }
+        setError(
+          err.response?.status === 403
+            ? "You don't have access to this ticket's chat."
+            : "Failed to load messages.",
+        );
       })
       .finally(() => setLoading(false));
   }, [ticketId]);
 
-  // ── 2. Subscribe to Reverb private channel ──────────────
+  // ── 2. Subscribe to Reverb ──────────────────────────────
   useEffect(() => {
     if (!ticketId) return;
 
     const channel = echo.private(`ticket.${ticketId}`);
 
-    channel.listen(".message.sent", (data) => {
-      const incoming = data.message;
-      setMessages((prev) => {
-        // Deduplicate by id
-        if (prev.some((m) => m.id === incoming.id)) return prev;
-        return [...prev, incoming];
-      });
+    channel.listen(".message.sent", ({ message: incoming }) => {
+      // Skip if we already have this message (optimistic or history)
+      if (seenIds.current.has(incoming.id)) return;
+      seenIds.current.add(incoming.id);
+      setMessages((prev) => [...prev, incoming]);
     });
 
-    // Cleanup on unmount / ticketId change
-    return () => {
-      echo.leave(`ticket.${ticketId}`);
-    };
+    return () => echo.leave(`ticket.${ticketId}`);
   }, [ticketId]);
 
-  // ── 3. Auto-scroll on new messages ─────────────────────
+  // ── 3. Auto-scroll ──────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── 4. Send a message ──────────────────────────────────
+  // ── 4. Send ─────────────────────────────────────────────
   const sendMessage = useCallback(async () => {
     const value = text.trim();
     if (!value || sending || !ticketId) return;
@@ -120,28 +109,31 @@ export default function ChatBox({
     setSending(true);
     setText("");
 
-    // Optimistic — show immediately, replace with real on success
-    const optimisticId = `opt-${Date.now()}`;
+    // Optimistic entry uses a temp string id
+    const tempId = `opt-${Date.now()}`;
     const optimistic = {
-      id: optimisticId,
+      id: tempId,
       ticket_id: ticketId,
       sender_id: user?.id,
       sender_name: user?.name || "You",
       message: value,
       created_at: new Date().toISOString(),
-      _optimistic: true,
+      _opt: true,
     };
     setMessages((prev) => [...prev, optimistic]);
 
     try {
-      const res = await http.post(`messages/${ticketId}`, { message: value });
-      // Swap optimistic entry for the real one from the server
-      setMessages((prev) =>
-        prev.map((m) => (m.id === optimisticId ? res.data : m)),
-      );
+      const { data: real } = await http.post(`messages/${ticketId}`, {
+        message: value,
+      });
+
+      // Register the real id so the broadcast (which arrives separately) is dropped
+      seenIds.current.add(real.id);
+
+      // Replace optimistic with real
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? real : m)));
     } catch {
-      // Remove optimistic entry and restore input so user can retry
-      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setText(value);
     } finally {
       setSending(false);
@@ -156,7 +148,7 @@ export default function ChatBox({
     }
   };
 
-  // ── Minimised bubble ────────────────────────────────────
+  // ── Minimised bubble ─────────────────────────────────────
   if (minimized) {
     return (
       <div
@@ -183,7 +175,7 @@ export default function ChatBox({
     );
   }
 
-  // ── Full chat window ────────────────────────────────────
+  // ── Full window ──────────────────────────────────────────
   return (
     <div className="messenger-window">
       {/* HEADER */}
@@ -221,8 +213,7 @@ export default function ChatBox({
             style={{
               cursor: "pointer",
               color: "var(--muted)",
-              fontSize: "1rem",
-              lineHeight: 1,
+              fontSize: "1.1rem",
             }}
           >
             —
@@ -235,7 +226,6 @@ export default function ChatBox({
                 cursor: "pointer",
                 color: "var(--muted)",
                 fontSize: "1rem",
-                lineHeight: 1,
               }}
             >
               ✕
@@ -246,7 +236,6 @@ export default function ChatBox({
 
       {/* BODY */}
       <div className="messenger-body">
-        {/* Loading */}
         {loading && (
           <p
             style={{
@@ -259,8 +248,6 @@ export default function ChatBox({
             Loading messages…
           </p>
         )}
-
-        {/* Access error */}
         {error && (
           <p
             style={{
@@ -273,8 +260,6 @@ export default function ChatBox({
             {error}
           </p>
         )}
-
-        {/* Empty state */}
         {!loading && !error && messages.length === 0 && (
           <p
             style={{
@@ -288,10 +273,9 @@ export default function ChatBox({
           </p>
         )}
 
-        {/* Messages */}
-        {messages.map((msg, index) => {
+        {messages.map((msg, i) => {
           const isMe = msg.sender_id === user?.id;
-          const prev = messages[index - 1];
+          const prev = messages[i - 1];
           const grouped = prev && prev.sender_id === msg.sender_id;
 
           return (
@@ -300,7 +284,6 @@ export default function ChatBox({
               className={`msg-row ${isMe ? "user" : "bot"}`}
               style={{ alignItems: "flex-end" }}
             >
-              {/* Avatar — left side, not grouped */}
               {!isMe && !grouped && (
                 <Avatar name={msg.sender_name} isMe={false} />
               )}
@@ -308,10 +291,9 @@ export default function ChatBox({
 
               <div
                 className={`msg-bubble ${isMe ? "user" : "bot"} ${grouped ? "grouped" : ""}`}
-                title={fmt(msg.created_at)}
-                style={{ opacity: msg._optimistic ? 0.6 : 1 }}
+                title={fmtTime(msg.created_at)}
+                style={{ opacity: msg._opt ? 0.6 : 1 }}
               >
-                {/* Sender name — only for first in group, not self */}
                 {!isMe && !grouped && (
                   <div
                     style={{
@@ -324,10 +306,7 @@ export default function ChatBox({
                     {msg.sender_name || "User"}
                   </div>
                 )}
-
                 {msg.message}
-
-                {/* Timestamp */}
                 <div
                   style={{
                     fontSize: "0.65rem",
@@ -336,12 +315,11 @@ export default function ChatBox({
                     opacity: 0.55,
                   }}
                 >
-                  {fmt(msg.created_at)}
-                  {msg._optimistic && " · sending…"}
+                  {fmtTime(msg.created_at)}
+                  {msg._opt && " · sending…"}
                 </div>
               </div>
 
-              {/* Avatar — right side for self */}
               {isMe && !grouped && <Avatar name={user?.name} isMe={true} />}
               {isMe && grouped && <div style={{ width: 28, flexShrink: 0 }} />}
             </div>
@@ -355,9 +333,7 @@ export default function ChatBox({
       <div className="messenger-footer" style={{ gap: 8 }}>
         <input
           ref={inputRef}
-          placeholder={
-            error ? "Chat unavailable" : "Type a message… (Enter to send)"
-          }
+          placeholder={error ? "Chat unavailable" : "Message… (Enter to send)"}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKey}

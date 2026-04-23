@@ -13,7 +13,7 @@ import CreateTicket from "./features/default/pages/CreateTicket";
 import NotFound from "./features/default/pages/NotFound";
 import Unauthorized from "./features/default/pages/Unauthorized";
 
-// Manager pages
+// Manager / dispatcher pages
 import Ticket from "./features/manager/pages/Tickets";
 import CreateAssignment from "./features/manager/pages/CreateAssigment";
 import Progress from "./features/manager/pages/Progress";
@@ -22,10 +22,13 @@ import Progress from "./features/manager/pages/Progress";
 import Assignments from "./features/Technician/pages/Assignments";
 import Assigment from "./features/Technician/pages/Assigment";
 
+// Admin pages
+import AdminUsers from "./features/admin/pages/Users";
+
 export default function App() {
   return (
     <Routes>
-      {/* ── Public ────────────────────────────────── */}
+      {/* ── Public ──────────────────────────────────────── */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -33,22 +36,33 @@ export default function App() {
       <Route path="/404" element={<NotFound />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* ── Protected: all authenticated users ───── */}
+      {/* ── Any authenticated user ──────────────────────── */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/createTicket" element={<CreateTicket />} />
+      </Route>
+
+      {/* ── Technician + Admin ──────────────────────────── */}
+      <Route element={<ProtectedRoute roles={["technician", "admin"]} />}>
         <Route path="/technician/assignments" element={<Assignments />} />
         <Route path="/technician/assignment/:id" element={<Assigment />} />
       </Route>
 
-      {/* ── Protected: manager / admin ────────────── */}
-      <Route element={<ProtectedRoute roles={["manager", "admin"]} />}>
+      {/* ── Manager / Dispatcher / Admin ────────────────── */}
+      <Route
+        element={<ProtectedRoute roles={["manager", "dispatcher", "admin"]} />}
+      >
         <Route path="/manager/tickets" element={<Ticket />} />
         <Route path="/assign/:id" element={<CreateAssignment />} />
         <Route path="/progress/:id" element={<Progress />} />
       </Route>
 
-      {/* ── Fallback ──────────────────────────────── */}
+      {/* ── Admin only ──────────────────────────────────── */}
+      <Route element={<ProtectedRoute roles={["admin"]} />}>
+        <Route path="/admin/users" element={<AdminUsers />} />
+      </Route>
+
+      {/* ── Fallback ────────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );

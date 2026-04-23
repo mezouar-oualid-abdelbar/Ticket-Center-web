@@ -8,7 +8,7 @@ window.Pusher = Pusher;
 
 // Derive the API base without the trailing /api so we can build the auth URL
 const apiBase =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+  import.meta.env.VITE_API_BASE_URL || "http://realtime-api:8000/api";
 const serverBase = apiBase.replace(/\/api\/?$/, ""); // → http://localhost:8000
 
 const echo = new Echo({
@@ -16,7 +16,7 @@ const echo = new Echo({
 
   key: import.meta.env.VITE_REVERB_APP_KEY || "ticketcenter-key",
 
-  wsHost: import.meta.env.VITE_REVERB_HOST || "localhost",
+  wsHost: import.meta.env.VITE_REVERB_HOST || "realtime-api",
   wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
   wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
 

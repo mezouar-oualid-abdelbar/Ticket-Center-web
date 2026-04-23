@@ -1,23 +1,24 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuthContext } from "./context/AuthContext"; // fix import path
+// src/features/auth/ProtectedRoute.jsx
 
-export default function RoleProtectedRoute({ roles = [] }) {
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuthContext } from "./context/AuthContext";
+
+export default function ProtectedRoute({ roles = [] }) {
   const { user, loading } = useAuthContext();
 
   if (loading) return <p>Loading...</p>;
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
 
-  // handle both user.role (string) and user.roles (array)
-  const userRoles = Array.isArray(user.roles)
-    ? user.roles
-    : user.role
-      ? [user.role]
-      : [];
+  // Normalise: roles may be an array of strings or Role objects
+  const userRoles = (Array.isArray(user.roles) ? user.roles : [])
+    .map((r) => (typeof r === "string" ? r : (r?.name ?? "")))
+    .filter(Boolean);
 
-  if (roles.length && !roles.some((r) => userRoles.includes(r))) {
+  // No role restriction on this route — allow any authenticated user
+  if (roles.length === 0) return <Outlet />;
+
+  if (!roles.some((r) => userRoles.includes(r))) {
     return <Navigate to="/unauthorized" replace />;
   }
 

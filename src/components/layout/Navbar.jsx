@@ -17,6 +17,7 @@ import {
   faTimes,
   faTicket,
   faCircle,
+  faUsersGear,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useHasRole } from "../../utils/roles";
@@ -40,16 +41,15 @@ const notifIcon = {
 };
 const fmtTime = (d) =>
   new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-const statusLabel = {
-  open: "Open",
-  assigned: "Assigned",
-  in_progress: "In Progress",
-};
 const statusColor = {
   open: "#6c757d",
   assigned: "#0d6efd",
   in_progress: "#fd7e14",
+};
+const statusLabel = {
+  open: "Open",
+  assigned: "Assigned",
+  in_progress: "In Progress",
 };
 
 export default function Navbar() {
@@ -59,7 +59,9 @@ export default function Navbar() {
   const profile = useDropdown();
   const notif = useDropdown();
   const msgDropdown = useDropdown();
-  const canManageTickets = useHasRole(["manager", "admin"]);
+  const canManageTickets = useHasRole(["dispatcher", "admin"]);
+  const isUseAssigment = useHasRole(["admin", "technician"]);
+  const isAdmin = useHasRole(["admin"]);
   const location = useLocation();
 
   const {
@@ -71,11 +73,10 @@ export default function Navbar() {
     clearAll,
   } = useNotifications();
 
-  const [activeChat, setActiveChat] = useState(null); // { ticketId, ticketTitle }
+  const [activeChat, setActiveChat] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [myTickets, setMyTickets] = useState([]);
 
-  // Load the user's unresolved tickets for the messages dropdown
   useEffect(() => {
     if (!user) return;
     http
@@ -93,6 +94,7 @@ export default function Navbar() {
       to: "/technician/assignments",
       icon: faClipboardList,
       label: "Assignments",
+      assignmentOnly: true,
     },
     {
       to: "/manager/tickets",
@@ -101,6 +103,7 @@ export default function Navbar() {
       managerOnly: true,
     },
     { to: "/createTicket", icon: faTicket, label: "New Ticket" },
+    { to: "/admin/users", icon: faUsersGear, label: "Users", adminOnly: true },
   ];
 
   const closeAll = () => {
@@ -117,6 +120,14 @@ export default function Navbar() {
     msgDropdown.setOpen(false);
   };
 
+  // Shared link guard used in both desktop and mobile
+  const shouldShow = ({ managerOnly, adminOnly, assignmentOnly }) => {
+    if (managerOnly && !canManageTickets) return false;
+    if (adminOnly && !isAdmin) return false;
+    if (assignmentOnly && !isUseAssigment) return false;
+    return true;
+  };
+
   return (
     <>
       <nav className="fb-navbar">
@@ -127,16 +138,16 @@ export default function Navbar() {
 
         {/* CENTER */}
         <div className="nav-center nav-center-desktop">
-          {navLinks.map(({ to, icon, label, managerOnly }) => {
-            if (managerOnly && !canManageTickets) return null;
+          {navLinks.map((link) => {
+            if (!shouldShow(link)) return null;
             return (
               <Link
-                key={to}
-                to={to}
-                className={`nav-icon ${isActive(to) ? "nav-icon-active" : ""}`}
-                title={label}
+                key={link.to}
+                to={link.to}
+                className={`nav-icon ${isActive(link.to) ? "nav-icon-active" : ""}`}
+                title={link.label}
               >
-                <FontAwesomeIcon icon={icon} />
+                <FontAwesomeIcon icon={link.icon} />
               </Link>
             );
           })}
@@ -144,7 +155,7 @@ export default function Navbar() {
 
         {/* RIGHT */}
         <div className="nav-right">
-          {/* ── MESSAGES dropdown ── */}
+          {/* MESSAGES */}
           <div className="dropdown-wrapper" ref={msgDropdown.ref}>
             <div
               className="nav-icon badge-wrapper"
@@ -166,8 +177,7 @@ export default function Navbar() {
                 <div className="panel-header">
                   <span>Messages</span>
                   <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-                    {myTickets.length} active ticket
-                    {myTickets.length !== 1 ? "s" : ""}
+                    {myTickets.length} active
                   </span>
                 </div>
                 <div className="panel-list">
@@ -221,7 +231,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* ── NOTIFICATIONS dropdown ── */}
+          {/* NOTIFICATIONS */}
           <div className="dropdown-wrapper" ref={notif.ref}>
             <div
               className="nav-icon badge-wrapper"
@@ -251,7 +261,6 @@ export default function Navbar() {
                     {notifications.length > 0 && (
                       <button
                         onClick={clearAll}
-                        title="Clear all"
                         style={{ color: "var(--danger)" }}
                       >
                         ✕
@@ -269,12 +278,11 @@ export default function Navbar() {
                         className={`panel-item ${n.unread ? "unread" : ""}`}
                         onClick={() => {
                           markRead(n.id);
-                          if (n.meta?.ticketId) {
+                          if (n.meta?.ticketId)
                             openChat({
                               id: n.meta.ticketId,
                               title: n.meta.ticketTitle,
                             });
-                          }
                         }}
                       >
                         <span style={{ marginRight: 8, flexShrink: 0 }}>
@@ -304,7 +312,6 @@ export default function Navbar() {
                             style={{
                               fontSize: "0.4rem",
                               color: "var(--accent)",
-                              flexShrink: 0,
                               marginLeft: 6,
                             }}
                           />
@@ -317,7 +324,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* ── PROFILE ── */}
+          {/* PROFILE */}
           <div className="dropdown-wrapper" ref={profile.ref}>
             <div
               className="avatar"
@@ -344,7 +351,30 @@ export default function Navbar() {
                     <div style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
                       {user.email}
                     </div>
+                    {user.roles?.[0] && (
+                      <div
+                        style={{
+                          fontSize: "0.72rem",
+                          marginTop: 3,
+                          color: "var(--accent)",
+                          fontWeight: 600,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {user.roles[0]}
+                      </div>
+                    )}
                   </div>
+                )}
+
+                {isAdmin && (
+                  <Link
+                    to="/admin/users"
+                    className="dropdown-item"
+                    onClick={() => profile.setOpen(false)}
+                  >
+                    <FontAwesomeIcon icon={faUsersGear} /> User Management
+                  </Link>
                 )}
 
                 <div
@@ -387,7 +417,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* ── HAMBURGER ── */}
+          {/* HAMBURGER */}
           <div className="hamburger" onClick={() => setMobileOpen((o) => !o)}>
             <FontAwesomeIcon icon={mobileOpen ? faTimes : faBars} />
           </div>
@@ -401,17 +431,17 @@ export default function Navbar() {
             className="mobile-drawer-inner"
             onClick={(e) => e.stopPropagation()}
           >
-            {navLinks.map(({ to, icon, label, managerOnly }) => {
-              if (managerOnly && !canManageTickets) return null;
+            {navLinks.map((link) => {
+              if (!shouldShow(link)) return null;
               return (
                 <Link
-                  key={to}
-                  to={to}
-                  className={`mobile-nav-link ${isActive(to) ? "nav-icon-active" : ""}`}
+                  key={link.to}
+                  to={link.to}
+                  className={`mobile-nav-link ${isActive(link.to) ? "nav-icon-active" : ""}`}
                   onClick={() => setMobileOpen(false)}
                 >
-                  <FontAwesomeIcon icon={icon} />
-                  <span>{label}</span>
+                  <FontAwesomeIcon icon={link.icon} />
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
@@ -433,7 +463,7 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* CHAT WINDOW */}
+      {/* CHAT */}
       {activeChat && (
         <ChatBox
           ticketId={activeChat.ticketId}

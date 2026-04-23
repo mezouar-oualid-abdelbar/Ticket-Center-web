@@ -39,7 +39,11 @@ export function useLogin() {
         email: formData.email,
         password: formData.password,
       });
-      login(data.user ?? data); // set user in context
+
+      // Pass the FULL response (which includes roles + permissions at top level)
+      // AuthContext.login() will merge them into the user object
+      login(data);
+
       navigate("/");
     } catch (err) {
       setServerError(err.message || "Login failed. Please try again.");

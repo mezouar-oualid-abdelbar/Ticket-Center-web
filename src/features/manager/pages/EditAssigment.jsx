@@ -8,16 +8,16 @@ import SelectedTechnicians from "../components/SelectedTechnicians";
 
 import { useTicket } from "../hooks/useTicket";
 import { useTechnicians } from "../hooks/useTechnicians";
-import { useHandleSubmit } from "../hooks/useHandleSubmit";
+import { useHandleEdit } from "../hooks/useHandleEdit";
 
 import { inputStyle } from "../styles";
 
-export default function CreateAssignment() {
-  const { id } = useParams();
+export default function EditAssignment() {
+  const { id } = useParams(); // ticket id
 
   const { ticket, loading: ticketLoading } = useTicket(id);
   const { technicians, loading: techLoading } = useTechnicians();
-  const { handleSubmit, loading, error } = useHandleSubmit(id);
+  const { handleEdit, loading, error } = useHandleEdit(id);
 
   const [leader, setLeader] = useState(null);
   const [selectedTechs, setSelectedTechs] = useState([]);
@@ -25,13 +25,30 @@ export default function CreateAssignment() {
   const [priority, setPriority] = useState("");
 
   useEffect(() => {
-    if (ticket) {
-      setTitle(ticket.title || "");
-      setPriority(ticket.priority || "");
+    if (!ticket) return;
+
+    setTitle(ticket.title || "");
+    setPriority(ticket.priority || "");
+
+    // API returns "assigments" (array) — grab the first entry
+    const assignment = ticket.assigments?.[0];
+    if (!assignment) return;
+
+    // Leader comes as a full object — no need to look it up in technicians list
+    if (assignment.leader) {
+      setLeader(assignment.leader);
+    }
+
+    // Restore technicians, excluding the leader (they share the pivot table)
+    if (assignment.technicians?.length) {
+      const techs = assignment.technicians.filter(
+        (t) => t.id !== assignment.leader_id,
+      );
+      setSelectedTechs(techs);
     }
   }, [ticket]);
 
-  // When a leader is selected, remove them from selectedTechs if present
+  // When leader changes, remove them from selectedTechs if present
   const handleLeaderChange = (newLeader) => {
     setLeader(newLeader);
     if (newLeader) {
@@ -51,7 +68,9 @@ export default function CreateAssignment() {
 
       <div className="route-container">
         <div style={{ maxWidth: 420 }}>
-          <h3 style={{ marginTop: 20 }}>This message was created by</h3>
+          <h2 style={{ marginTop: 20 }}>Edit Assignment</h2>
+
+          <h3 style={{ marginTop: 20 }}>Reported by</h3>
           <div style={{ ...inputStyle, minHeight: 100 }}>
             {ticket?.reporter.name} ({ticket?.reporter.email})
           </div>
@@ -84,7 +103,6 @@ export default function CreateAssignment() {
             <option value="critical">Critical</option>
           </select>
 
-          {/* LEADER — uses handleLeaderChange to keep selectedTechs in sync */}
           <LeaderSelect
             technicians={technicians}
             leader={leader}
@@ -92,7 +110,6 @@ export default function CreateAssignment() {
             removeTechnicianFromList={removeTechnician}
           />
 
-          {/* TECHNICIANS — leader is excluded from the selectable list inside this component */}
           <TechniciansSelect
             technicians={technicians}
             leader={leader}
@@ -109,7 +126,7 @@ export default function CreateAssignment() {
 
           <button
             onClick={() =>
-              handleSubmit({ title, priority, leader, selectedTechs })
+              handleEdit({ title, priority, leader, selectedTechs })
             }
             disabled={loading}
             style={{
@@ -122,7 +139,7 @@ export default function CreateAssignment() {
               borderRadius: 4,
             }}
           >
-            {loading ? "Submitting..." : "Assign Ticket"}
+            {loading ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>

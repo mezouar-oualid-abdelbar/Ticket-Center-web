@@ -1,6 +1,10 @@
 // src/components/ChatBox.jsx
 // Real-time chat. Deduplication uses a seenIds Set so optimistic messages
 // are never doubled when the broadcast arrives.
+//
+// FIX: Race condition where broadcast arrives before POST response was causing
+// duplicates. Now the broadcast listener also matches optimistic messages by
+// sender_id + message content and replaces them instead of appending.
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import "../styles/chatbox.css";
@@ -87,10 +91,31 @@ export default function ChatBox({
     const channel = echo.private(`ticket.${ticketId}`);
 
     channel.listen(".message.sent", ({ message: incoming }) => {
-      // Skip if we already have this message (optimistic or history)
+      // Drop if already registered (e.g. POST response was faster)
       if (seenIds.current.has(incoming.id)) return;
       seenIds.current.add(incoming.id);
-      setMessages((prev) => [...prev, incoming]);
+
+      setMessages((prev) => {
+        // FIX: If broadcast arrives BEFORE the POST response, an optimistic
+        // copy with a temp id exists. Find it by matching sender + content and
+        // replace it instead of appending — prevents the duplicate.
+        const optIdx = prev.findIndex(
+          (m) =>
+            m._opt &&
+            m.sender_id === incoming.sender_id &&
+            m.message === incoming.message,
+        );
+
+        if (optIdx !== -1) {
+          // Replace the optimistic entry in-place
+          const next = [...prev];
+          next[optIdx] = incoming;
+          return next;
+        }
+
+        // No optimistic match — normal append
+        return [...prev, incoming];
+      });
     });
 
     return () => echo.leave(`ticket.${ticketId}`);
@@ -127,11 +152,22 @@ export default function ChatBox({
         message: value,
       });
 
-      // Register the real id so the broadcast (which arrives separately) is dropped
+      // Register the real id BEFORE updating state so any concurrent broadcast
+      // that fires between now and the next render is already blocked.
       seenIds.current.add(real.id);
 
-      // Replace optimistic with real
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? real : m)));
+      // Replace optimistic with real, then deduplicate in case the broadcast
+      // already replaced the optimistic entry before this response arrived.
+      setMessages((prev) => {
+        const replaced = prev.map((m) => (m.id === tempId ? real : m));
+
+        // FIX: Remove any duplicate of real.id that was inserted by the
+        // broadcast listener winning the race against the POST response.
+        return replaced.filter(
+          (m, i, arr) =>
+            m.id !== real.id || arr.findIndex((x) => x.id === real.id) === i,
+        );
+      });
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setText(value);

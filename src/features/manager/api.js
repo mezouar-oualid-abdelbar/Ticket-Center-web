@@ -79,28 +79,6 @@ export async function getTiketProgress(ticketId) {
     }
   }
 }
-// export async function updateTicket(id, data) {
-//   try {
-//     const response = await http.put(`ticket/${id}`, data);
-//     return response.data;
-//   } catch (error) {
-//     if (error.response) {
-//       throw error.response.data;
-//     } else {
-//       throw { message: "Network error" };
-//     }
-//   }
-// }
 
-// export async function deleteTicket(id) {
-//   try {
-//     const response = await http.delete(`ticket/${id}`);
-//     return response.data;
-//   } catch (error) {
-//     if (error.response) {
-//       throw error.response.data;
-//     } else {
-//       throw { message: "Network error" };
-//     }
-//   }
-// }
+export const updateAssignment = (ticketId, data) =>
+  http.put(`assignments/${ticketId}`, data).then((res) => res.data);

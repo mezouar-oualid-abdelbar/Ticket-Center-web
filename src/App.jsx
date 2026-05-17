@@ -16,6 +16,7 @@ import Unauthorized from "./features/default/pages/Unauthorized";
 // Manager / dispatcher pages
 import Ticket from "./features/manager/pages/Tickets";
 import CreateAssignment from "./features/manager/pages/CreateAssigment";
+import EditAssignment from "./features/manager/pages/EditAssigment";
 import Progress from "./features/manager/pages/Progress";
 
 // Technician pages
@@ -53,7 +54,9 @@ export default function App() {
         element={<ProtectedRoute roles={["manager", "dispatcher", "admin"]} />}
       >
         <Route path="/manager/tickets" element={<Ticket />} />
+        <Route path="/assign/edit/:id" element={<EditAssignment />} />
         <Route path="/assign/:id" element={<CreateAssignment />} />
+
         <Route path="/progress/:id" element={<Progress />} />
       </Route>
 

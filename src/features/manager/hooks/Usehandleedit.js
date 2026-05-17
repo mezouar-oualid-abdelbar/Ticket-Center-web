@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createAssignment } from "../api";
-import { assignment } from "../validations/assigment";
+import { updateAssignment } from "../api";
+import { assignment as validate } from "../validations/assigment";
 
-export function useHandleSubmit(ticketId) {
+export function useHandleEdit(ticketId) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async ({ title, priority, leader, selectedTechs }) => {
+  const handleEdit = async ({ title, priority, leader, selectedTechs }) => {
     setError("");
 
-    const validationError = assignment({
+    const validationError = validate({
       title,
       priority,
       leader,
@@ -27,7 +27,7 @@ export function useHandleSubmit(ticketId) {
       title,
       priority,
       leader_id: leader.id,
-      // FIX: exclude the leader from technician_ids so they are not assigned twice
+      // Exclude leader from technician_ids — backend merges them
       technician_ids: selectedTechs
         .filter((t) => t.id !== leader.id)
         .map((t) => t.id),
@@ -35,7 +35,7 @@ export function useHandleSubmit(ticketId) {
 
     try {
       setLoading(true);
-      await createAssignment(ticketId, data);
+      await updateAssignment(ticketId, data);
       navigate("/manager/tickets");
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -44,5 +44,5 @@ export function useHandleSubmit(ticketId) {
     }
   };
 
-  return { handleSubmit, loading, error };
+  return { handleEdit, loading, error };
 }

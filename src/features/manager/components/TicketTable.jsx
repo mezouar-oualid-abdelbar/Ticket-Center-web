@@ -37,9 +37,18 @@ export default function TicketTable({ tickets }) {
                       Assign
                     </button>
                   ) : (
-                    <button onClick={() => navigate(`/progress/${ticket.id}`)}>
-                      Watch Progress
-                    </button>
+                    <>
+                      <button
+                        onClick={() => navigate(`/progress/${ticket.id}`)}
+                      >
+                        Watch Progress
+                      </button>
+                      <button
+                        onClick={() => navigate(`/assign/edit/${ticket.id}`)}
+                      >
+                        edit
+                      </button>
+                    </>
                   )}
                 </td>
               </tr>

@@ -1,10 +1,4 @@
 // src/components/ChatBox.jsx
-// Real-time chat. Deduplication uses a seenIds Set so optimistic messages
-// are never doubled when the broadcast arrives.
-//
-// FIX: Race condition where broadcast arrives before POST response was causing
-// duplicates. Now the broadcast listener also matches optimistic messages by
-// sender_id + message content and replaces them instead of appending.
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import "../styles/chatbox.css";
@@ -16,6 +10,12 @@ const fmtTime = (d) =>
   d
     ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
+
+// A message is a system notice if the backend flagged it OR it has no sender
+const isSystemMsg = (msg) =>
+  msg.type === "system" ||
+  msg.sender_id === null ||
+  msg.sender_id === undefined;
 
 function Avatar({ name, isMe }) {
   return (
@@ -41,6 +41,66 @@ function Avatar({ name, isMe }) {
   );
 }
 
+// ── Centered system notice — no avatar, no bubble ────────────
+function SystemMessage({ message, created_at }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        margin: "14px 16px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 3,
+          textAlign: "center",
+          border: "1.5px solid #e53e3e",
+          borderRadius: 8,
+          padding: "8px 14px",
+          background: "rgba(229, 62, 62, 0.06)",
+          maxWidth: 300,
+        }}
+      >
+        {/* App name label */}
+        <span
+          style={{
+            fontSize: "0.68rem",
+            fontWeight: 700,
+            color: "#e53e3e",
+            letterSpacing: "0.04em",
+            userSelect: "none",
+          }}
+        >
+          Ticket Center
+        </span>
+
+        {/* Message text */}
+        <span
+          style={{
+            fontSize: "0.72rem",
+            color: "var(--muted)",
+            lineHeight: 1.5,
+          }}
+          title={fmtTime(created_at)}
+        >
+          {message}
+        </span>
+
+        {/* Timestamp */}
+        <span
+          style={{ fontSize: "0.62rem", color: "var(--muted)", opacity: 0.55 }}
+        >
+          {fmtTime(created_at)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function ChatBox({
   ticketId,
   ticketTitle = "Ticket Chat",
@@ -57,7 +117,6 @@ export default function ChatBox({
 
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
-  // Tracks real server IDs so broadcast duplicates are dropped
   const seenIds = useRef(new Set());
 
   // ── 1. Load history ──────────────────────────────────────
@@ -91,31 +150,29 @@ export default function ChatBox({
     const channel = echo.private(`ticket.${ticketId}`);
 
     channel.listen(".message.sent", ({ message: incoming }) => {
-      // Drop if already registered (e.g. POST response was faster)
       if (seenIds.current.has(incoming.id)) return;
       seenIds.current.add(incoming.id);
 
       setMessages((prev) => {
-        // FIX: If broadcast arrives BEFORE the POST response, an optimistic
-        // copy with a temp id exists. Find it by matching sender + content and
-        // replace it instead of appending — prevents the duplicate.
         const optIdx = prev.findIndex(
           (m) =>
             m._opt &&
             m.sender_id === incoming.sender_id &&
             m.message === incoming.message,
         );
-
         if (optIdx !== -1) {
-          // Replace the optimistic entry in-place
           const next = [...prev];
           next[optIdx] = incoming;
           return next;
         }
-
-        // No optimistic match — normal append
         return [...prev, incoming];
       });
+    });
+
+    channel.listen(".system.message", ({ message: incoming }) => {
+      if (seenIds.current.has(incoming.id)) return;
+      seenIds.current.add(incoming.id);
+      setMessages((prev) => [...prev, { ...incoming, type: "system" }]);
     });
 
     return () => echo.leave(`ticket.${ticketId}`);
@@ -134,7 +191,6 @@ export default function ChatBox({
     setSending(true);
     setText("");
 
-    // Optimistic entry uses a temp string id
     const tempId = `opt-${Date.now()}`;
     const optimistic = {
       id: tempId,
@@ -152,17 +208,10 @@ export default function ChatBox({
         message: value,
       });
 
-      // Register the real id BEFORE updating state so any concurrent broadcast
-      // that fires between now and the next render is already blocked.
       seenIds.current.add(real.id);
 
-      // Replace optimistic with real, then deduplicate in case the broadcast
-      // already replaced the optimistic entry before this response arrived.
       setMessages((prev) => {
         const replaced = prev.map((m) => (m.id === tempId ? real : m));
-
-        // FIX: Remove any duplicate of real.id that was inserted by the
-        // broadcast listener winning the race against the POST response.
         return replaced.filter(
           (m, i, arr) =>
             m.id !== real.id || arr.findIndex((x) => x.id === real.id) === i,
@@ -310,9 +359,22 @@ export default function ChatBox({
         )}
 
         {messages.map((msg, i) => {
+          // ── System message ───────────────────────────────
+          if (isSystemMsg(msg)) {
+            return (
+              <SystemMessage
+                key={msg.id}
+                message={msg.message}
+                created_at={msg.created_at}
+              />
+            );
+          }
+
+          // ── Regular chat message ─────────────────────────
           const isMe = msg.sender_id === user?.id;
           const prev = messages[i - 1];
-          const grouped = prev && prev.sender_id === msg.sender_id;
+          const grouped =
+            prev && !isSystemMsg(prev) && prev.sender_id === msg.sender_id;
 
           return (
             <div

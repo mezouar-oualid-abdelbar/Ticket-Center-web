@@ -36,6 +36,10 @@ export default function TicketTable({ tickets }) {
                     <button onClick={() => navigate(`/assign/${ticket.id}`)}>
                       Assign
                     </button>
+                  ) : ticket.status === "resolved" ? (
+                    <button onClick={() => navigate(`/progress/${ticket.id}`)}>
+                      Watch Progress
+                    </button>
                   ) : (
                     <>
                       <button

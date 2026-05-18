@@ -38,7 +38,6 @@
   border-radius: var(--radius);
   font-weight: 600;
   font-size: 0.85rem;
-  color: #fff;
 }
 
 /* Status colors */
@@ -54,6 +53,56 @@
   background: #068fff; /* distinct blue for completed */
 }
 
+/* action buttons container */
+td button {
+  border: none;
+  outline: none;
+  padding: 10px 16px;
+  margin: 4px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+  color: #fff;
+}
+
+/* Assign button */
+td button:first-child {
+  background: #4e4feb;
+}
+
+td button:first-child:hover {
+  background: #3b3bd1;
+  transform: translateY(-2px);
+}
+
+/* Watch Progress button */
+td button:nth-child(1):has(+ button),
+td button:only-child {
+  background: #068fff;
+}
+
+td button:nth-child(1):has(+ button):hover,
+td button:only-child:hover {
+  background: #0577d6;
+  transform: translateY(-2px);
+}
+
+/* Edit button */
+td button:last-child {
+  background: #dc5f00;
+}
+
+td button:last-child:hover {
+  background: #b84f00;
+  transform: translateY(-2px);
+}
+
+/* optional active click effect */
+td button:active {
+  transform: scale(0.96);
+}
 /* Responsive table */
 @media (max-width: 768px) {
   .grid table,

@@ -65,6 +65,9 @@ export default function CreateTicket() {
               onChange={handleChange}
               placeholder="Write your problem..."
               disabled={isLoading}
+              onPaste={(e) => {
+                console.log("Pasting:", e.clipboardData.getData("text"));
+              }}
               style={{
                 padding: "12px 15px",
                 borderRadius: "10px",
@@ -79,6 +82,9 @@ export default function CreateTicket() {
                 overflow: "hidden",
                 outline: "none",
                 transition: "0.2s",
+                minHeight: "120px",
+                pointerEvents: "auto",
+                userSelect: "text",
               }}
             />
             {errors.description && (

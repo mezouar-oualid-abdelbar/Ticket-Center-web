@@ -105,6 +105,9 @@
   overflow: hidden;
   animation: fadeIn 0.15s ease;
   z-index: 2000;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  isolation: isolate;
 }
 
 .panel-header {
@@ -195,6 +198,9 @@
   padding: 6px 0;
   animation: fadeIn 0.15s ease;
   z-index: 2000;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  isolation: isolate;
 }
 
 .dropdown-item {

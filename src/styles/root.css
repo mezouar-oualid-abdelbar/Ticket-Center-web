@@ -31,7 +31,7 @@ html.dark {
   --fg: #e0e6f2; /* soft off-white text */
   --accent: #ff9f43; /* warm orange accent */
   --muted: rgba(224, 230, 242, 0.55); /* muted text */
-  --card-bg: rgba(255, 159, 67, 0.05); /* subtle translucent orange cards */
+  --card-bg: #161b27; /* solid dark — was rgba(...0.05) */
   --card-border: rgba(255, 159, 67, 0.12); /* border in orange */
   --glass: rgba(255, 159, 67, 0.08); /* translucent accent effect */
   --radius: 12px;

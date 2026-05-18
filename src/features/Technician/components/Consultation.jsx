@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { completeAppointment } from "../api";
 import { useNavigate } from "react-router-dom";
+import { updateAppointment, completeAppointment } from "../api";
 
 export default function Consultation({ interventionid, onComplete }) {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [ending, setEnding] = useState(false);
   const navigate = useNavigate();
+
+  // In Consultation.jsx
 
   const handleUpdate = async () => {
     if (!note.trim()) {
@@ -15,7 +17,7 @@ export default function Consultation({ interventionid, onComplete }) {
     }
     setLoading(true);
     try {
-      await completeAppointment(interventionid, { note });
+      await updateAppointment(interventionid, { note }); // <-- was completeAppointment
       alert("Consultation updated!");
       onComplete?.(interventionid);
     } catch (err) {

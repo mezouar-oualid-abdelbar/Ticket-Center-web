@@ -81,4 +81,4 @@ export async function getTiketProgress(ticketId) {
 }
 
 export const updateAssignment = (ticketId, data) =>
-  http.put(`assignments/${ticketId}`, data).then((res) => res.data);
+  http.put(`manager/assignments/${ticketId}`, data).then((res) => res.data);

@@ -1,119 +1,117 @@
 // src/hooks/useNotifications.js
-// Listens on the user's private Reverb channel for real-time events.
-// Also requests OS/browser notification permission and fires them.
-
-import { useState, useEffect, useCallback } from "react";
-import echo from "../services/socket/echo";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { http } from "../services/api/http";
 import { useAuthContext } from "../features/auth/context/AuthContext";
+import echo from "../services/socket/echo";
 
-/* ── Request OS notification permission once ── */
-function requestOsPermission() {
-  if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission();
-  }
-}
-
-/* ── Fire an OS notification if permitted ── */
-function fireOsNotification(title, body, icon = "/favicon.ico") {
-  if ("Notification" in window && Notification.permission === "granted") {
-    try {
-      new Notification(title, { body, icon });
-    } catch {
-      // some browsers block in certain contexts — ignore
-    }
-  }
-}
+const normalize = (n) => ({
+  id: n.id,
+  text: n.message,
+  type: n.type,
+  unread: !n.is_read,
+  time: n.created_at,
+  meta: {
+    ticketId: n.related_type?.includes("Ticket") ? n.related_id : null,
+    ticketTitle: n.title,
+  },
+});
 
 export function useNotifications() {
   const { user } = useAuthContext();
-  const [notifications, setNotifications] = useState([]);
 
-  // ── Request OS permission on first render ──
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`notifs_${user?.id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const fetchedIds = useRef(new Set());
+
+  // ── persist ──
   useEffect(() => {
-    requestOsPermission();
-  }, []);
+    if (!user) return;
+    try {
+      localStorage.setItem(`notifs_${user.id}`, JSON.stringify(notifications));
+    } catch {}
+  }, [notifications, user]);
 
-  const addNotification = useCallback((text, type = "info", meta = {}) => {
-    setNotifications((prev) => [
-      {
-        id: crypto.randomUUID(),
-        text,
-        type,
-        meta, // { ticketId, ticketTitle } — used by messages dropdown
-        unread: true,
-        time: new Date(),
-      },
-      ...prev,
-    ]);
-  }, []);
+  // ── fetch + reset when user changes ──
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]); // ← clear when logged out
+      fetchedIds.current = new Set();
+      return;
+    }
 
-  // ── Subscribe to private channel ──
+    // Reset before loading the new user's notifications
+    setNotifications([]);
+    fetchedIds.current = new Set();
+
+    // Load from localStorage for THIS user first (instant paint)
+    try {
+      const saved = localStorage.getItem(`notifs_${user.id}`);
+      if (saved) setNotifications(JSON.parse(saved));
+    } catch {}
+
+    // Then fetch fresh from server
+    http.get("notifications").then((r) => {
+      const items = (r.data?.data ?? r.data ?? []).map(normalize);
+      items.forEach((n) => fetchedIds.current.add(n.id));
+      setNotifications(items);
+    });
+  }, [user?.id]); // ← key on user.id, not the whole user object
+
+  // ── WebSocket — re-subscribe when user.id changes ──
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = echo.private(`users.${user.id}`);
+    const channelName = `users.${user.id}`;
 
-    // Ticket assigned to this user (technician)
-    channel.listen(".ticket.assigned", (data) => {
-      const title = `Assigned: ${data.ticket_title ?? "#" + data.ticket_id}`;
-      addNotification(title, "assignment", { ticketId: data.ticket_id });
-      fireOsNotification("New Assignment", title);
-    });
-
-    // Ticket you created is resolved
-    channel.listen(".ticket.resolved", (data) => {
-      const title = `Resolved: ${data.ticket_title ?? "#" + data.ticket_id}`;
-      addNotification(title, "resolved", { ticketId: data.ticket_id });
-      fireOsNotification("Ticket Resolved", title);
-    });
-
-    // New chat message on a ticket you're involved in
-    channel.listen(".message.received", (data) => {
-      const text = `💬 ${data.sender_name}: ${data.preview ?? ""}`;
-      addNotification(text, "message", {
-        ticketId: data.ticket_id,
-        ticketTitle: data.ticket_title,
-      });
-      fireOsNotification(
-        `New message — ${data.ticket_title ?? "Ticket"}`,
-        `${data.sender_name}: ${data.preview ?? ""}`,
-      );
+    echo.private(channelName).listen(".notification.sent", (e) => {
+      const incoming = normalize(e);
+      if (fetchedIds.current.has(incoming.id)) return;
+      fetchedIds.current.add(incoming.id);
+      setNotifications((prev) => [incoming, ...prev]);
     });
 
     return () => {
-      echo.leave(`users.${user.id}`);
+      echo.leave(channelName); // ← always leave the OLD user's channel on cleanup
     };
-  }, [user?.id, addNotification]);
+  }, [user?.id]); // ← key on user.id so it resubscribes on user switch
 
   const unreadCount = notifications.filter((n) => n.unread).length;
-
-  // How many unread message notifications (for the envelope badge)
   const unreadMessages = notifications.filter(
     (n) => n.unread && n.type === "message",
   );
 
-  const markAllRead = useCallback(
-    () => setNotifications((p) => p.map((n) => ({ ...n, unread: false }))),
-    [],
-  );
+  const markRead = useCallback(async (id) => {
+    await http.patch(`notifications/${id}/read`);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, unread: false } : n)),
+    );
+  }, []);
 
-  const markRead = useCallback(
-    (id) =>
-      setNotifications((p) =>
-        p.map((n) => (n.id === id ? { ...n, unread: false } : n)),
-      ),
-    [],
-  );
+  const markAllRead = useCallback(async () => {
+    await http.patch("notifications/read-all");
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  }, []);
 
-  const clearAll = useCallback(() => setNotifications([]), []);
+  const clearAll = useCallback(async () => {
+    await http.delete("notifications");
+    localStorage.removeItem(`notifs_${user?.id}`);
+    setNotifications([]);
+    fetchedIds.current = new Set();
+  }, [user?.id]);
 
   return {
     notifications,
     unreadCount,
-    unreadMessages, // ← used by messages dropdown
-    markAllRead,
+    unreadMessages,
     markRead,
+    markAllRead,
     clearAll,
-    addNotification,
   };
 }
